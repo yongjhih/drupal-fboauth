@@ -21,9 +21,9 @@ function fboauth_uninstall() {
 function fboauth_schema() { 
   $schema['fboauth_users'] = array( 
     'fields' => array( 
-      'uid'            => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0), 
-      'fbid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'big'),
-    ),
+    'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0), 
+    'fbid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'big'),
+  ),
     'primary key' => array('fbid'), 
   );
     
