@@ -38,7 +38,7 @@ function fboauth_login() {
           $query = 'INSERT INTO {fboauth_users} (uid, fbid) VALUES (%d, %d)';
           db_query($query, user_uid_optional_to_arg(NULL), $fbuser->id);
           drupal_goto('/'.$_REQUEST["destination"]);
-        } else {
+        } else if(variable_get('user_register', 1)) {  //register new user only if its allowed
           $user = _create_user($fbuser);
           $account = user_load($user->uid);
           user_external_login($account);
