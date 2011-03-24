@@ -88,10 +88,14 @@ function fboauth_block($op = 'list', $delta = '', $edit = array()) {
       global $base_url;
       $id = variable_get('fboauth_id', '');
       $secret = variable_get('fboauth_secret', '');
-      if($id and $secret) {
-        $block['content'] = '<a href="https://www.facebook.com/dialog/oauth?client_id='.$id.'&amp;redirect_uri='.urlencode($base_url.'/?q=fboauth&'.drupal_get_destination()).'&amp;scope=email"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="fblogin" /></a>';
-      } else {
-        $block['content'] = t('Please set up App ID and App secret first.');
+      $query = "SELECT fbid FROM {fboauth_users} where uid = %d";
+      $uid = db_result(db_query($query, user_uid_optional_to_arg(NULL)));
+      if(! $uid) {
+        if($id and $secret) {
+          $block['content'] = '<a href="https://www.facebook.com/dialog/oauth?client_id='.$id.'&amp;redirect_uri='.urlencode($base_url.'/?q=fboauth&'.drupal_get_destination()).'&amp;scope=email"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="fblogin" /></a>';
+        } else {
+          $block['content'] = t('Please set up App ID and App secret first.');
+        }
       }
       return $block;
   }
