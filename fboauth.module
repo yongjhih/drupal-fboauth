@@ -66,7 +66,7 @@ function _create_user($fbuser) {
     'name' => $fbuser->name,
     'mail' => $fbuser->email,
     'status' => 1,
-    'picture' => 'https://graph.facebook.com/'.$fbuser->id.'/picture',
+    //'picture' => 'https://graph.facebook.com/'.$fbuser->id.'/picture',
     );
   $user = user_save(NULL, $account);
   $query = 'INSERT INTO {fboauth_users} (uid, fbid) VALUES (%d, %d)';
