@@ -61,12 +61,17 @@ function _create_user($fbuser) {
   if ($i>0) {
     $fbuser->name=$fbuser->name.' '.$i;
   }
-
+  $path = file_create_path('fboauth');
+  file_check_directory($path, FILE_CREATE_DIRECTORY);
+  $picture = file_get_contents('https://graph.facebook.com/'.$fbuser->id.'/picture');
+  $file=fopen($path.$fbuser->id.'.jpg',"w");
+  fwrite($file, $picture);
+  fclose($file);
   $account = array(
     'name' => $fbuser->name,
     'mail' => $fbuser->email,
     'status' => 1,
-    //'picture' => 'https://graph.facebook.com/'.$fbuser->id.'/picture',
+    'picture' => $path.$fbuser->id.'.jpg',
     );
   $user = user_save(NULL, $account);
   $query = 'INSERT INTO {fboauth_users} (uid, fbid) VALUES (%d, %d)';
