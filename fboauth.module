@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * @file
+ * Used to login throught Facebook
+ */
+
+/**
+ * Implementation of hook_install().
+ * fboauth - page for catch redirects from Facebook
+ * admin/settings/fboauth - settings for app id and secret
+ */
 function fboauth_menu() {
   $items['fboauth'] = array(
     'title' => 'Facebook connect',
@@ -8,7 +18,7 @@ function fboauth_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['admin/settings/fboauth'] = array(
-    'title' => t('FBoauth settings'),
+    'title' => t('FBOAuth settings'),
     'page callback' => 'fboauth_settings',
     'access arguments' => array('administer users'),
     'type' => MENU_NORMAL_ITEM,
@@ -16,6 +26,9 @@ function fboauth_menu() {
   return $items;
 }
 
+/**
+ * serve fboauth page whitch get code parameter from Facebook and create or login user
+ */
 function fboauth_login() {
   $id = variable_get('fboauth_id', '');
   $secret = variable_get('fboauth_secret', '');
@@ -50,6 +63,9 @@ function fboauth_login() {
   drupal_goto('/'); // available only with error
 }
 
+/**
+ * create new user, call from fboauth_login
+ */
 function _create_user($fbuser) {
   $query = "SELECT uid FROM {users} WHERE name = '%s'";
   $uid = db_result(db_query($query, $fbuser->name));
@@ -81,6 +97,10 @@ function _create_user($fbuser) {
   return $user;
 }
 
+/**
+ * Implementation of hook_block().
+ * if everything is ok and user is not connected from facebook, shov connect button in block
+ */
 function fboauth_block($op = 'list', $delta = '', $edit = array()) {
   switch ($op) {
     case 'list':
@@ -104,11 +124,16 @@ function fboauth_block($op = 'list', $delta = '', $edit = array()) {
       return $block;
   }
 }
-
+/**
+ * serve admin/settings/fboauth page
+ */
 function fboauth_settings() {
   return drupal_get_form('fboauth_settings_form');
 }
 
+/**
+ * define settings form
+ */
 function fboauth_settings_form($context) {
   $form = array();
   $form['fboauth']['fboauth_id'] = array(
@@ -135,7 +160,11 @@ function fboauth_settings_form($context) {
   return $form;
 }
 
+/**
+ * save form variables
+ */
 function fboauth_settings_form_submit($form, &$form_state) {
   variable_set('fboauth_id', $form_state['clicked_button']['#post']['fboauth_id']);
   variable_set('fboauth_secret', $form_state['clicked_button']['#post']['fboauth_secret']);
 }
+

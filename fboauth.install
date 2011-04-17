@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Used to login throught Facebook
+ */
+
+/**
  * Implementation of hook_install().
  */
 function fboauth_install() {
@@ -8,12 +13,15 @@ function fboauth_install() {
   _fboauth_change_user_mail_field();
 }
 
+/**
+ * Implementation of hook_uninstall().
+ * remove database schema and config variables
+ */
 function fboauth_uninstall() { 
   drupal_uninstall_schema('fboauth');
   variable_del('fboauth_id');
   variable_del('fboauth_secret');
 }
-
 
 /** 
  * Implementation of hook_schema(). 
@@ -43,7 +51,10 @@ function fboauth_schema_alter(&$schema) {
  */
 function _fboauth_change_user_mail_field($action = 'install') {
   $schema = array('users' => drupal_get_schema('users'));
-  if ($action == 'install') fboauth_schema_alter($schema);
+  if ($action == 'install') {
+    fboauth_schema_alter($schema);
+  }
   db_change_field($res, 'users', 'mail', 'mail', $schema['users']['fields']['mail']);
   return $res;
 }
+
