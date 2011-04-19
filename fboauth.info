@@ -1,6 +1,3 @@
-name = FBOauth
-description = Easy to use Facebook Oauth login
+name = Facebook OAuth
+description = Allow users to connect with Facebook and query information.
 core = 6.x
-version = 6.x-0.1
-package = Authentication
-

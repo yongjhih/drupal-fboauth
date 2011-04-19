@@ -20,9 +20,9 @@ Installation
 3. Login as an administrator. Enable the module in the "Administer" -> "Site
    Building" -> "Modules"
 
-4. Configure the FBOAuth module settings under "Administer" -> "Site
-   configuration" -> "FBOauth settings". Copy and paste the App ID and App
-   Secret from your newly created Facebook application's settings.
+4. Configure the Facebook OAuth module settings under "Administer" -> "Site
+   configuration" -> "Facebook OAuth settings". Copy and paste the App ID and
+   App Secret from your newly created Facebook application's settings.
 
    Note that it is highly recommended to request access to the Facebook user's
    e-mail address so that normal Drupal functionality (the password reset for

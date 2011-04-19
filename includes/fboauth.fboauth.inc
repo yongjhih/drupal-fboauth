@@ -121,7 +121,7 @@ function fboauth_create_user($fbuser) {
     'name' => $username,
     'mail' => $fbuser->email,
     'status' => 1,
-    'fboauth' => TRUE, // Used to signify this is being imported by FBOAuth.
+    'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
   );
 
@@ -187,7 +187,7 @@ function fboauth_create_user($fbuser) {
  *   "redirect" URL and when requesting an access token.
  * @return
  *   An access token that can be used in REST queries against Facebook's Graph
- *   API, which will provide us with information about the Facebook user.
+ *   API, which will provide us with info about the Facebook user.
  */
 function fboauth_access_token($code, $action_name, $app_id = NULL, $app_secret = NULL) {
   // Use the default App ID and App Secret if not specified.

@@ -1,26 +1,26 @@
 <?php
 /**
  * @file
- * This file contains API documentation for the FBOAuth module. Note that all of
- * this code is merely for example purposes, it is never executed when using
- * the FBOAuth module.
+ * This file contains API documentation for the Facebook OAuth module. Note that
+ * all of this code is merely for example purposes, it is never executed when
+ * using the Facebook OAuth module.
  */
 
 /**
- * Hook to register new FBOAuth actions.
+ * Hook to register new Facebook OAuth actions.
  *
- * The FBOAuth module includes two default actions. The "connect" action links
- * a Facebook account with a Drupal user account. The "deauth" action revokes
- * Drupal's Facebook access for a user and deassociates the accounts. You can
- * write additional actions (such as data imports) by using this hook in your
- * own modules.
+ * The Facebook OAuth module includes two default actions. The "connect" action
+ * links a Facebook account with a Drupal user account. The "deauth" action
+ * revokes Drupal's Facebook access for a user and deassociates the accounts.
+ * You can write additional actions (such as data imports) by using this hook in
+ * your own modules.
  *
  * A full example of implementing this hook is included with the README.txt file
- * included with the FBOAuth module.
+ * included with the Facebook OAuth module.
  *
  * @return
- *   An array of FBOAuth actions keyed by a unique action name. Each action must
- *   specify at least the following properties:
+ *   An array of Facebook OAuth actions keyed by a unique action name. Each
+ *   action must specify at least the following properties:
  *   - title: A title for the action.
  *   - callback: The name of a function to execute after gaining access.
  *   - permissions: A list of Facebook permissions to request.
@@ -60,8 +60,8 @@ function hook_fboauth_actions() {
 /**
  * Hook to manually map Facebook data to a Drupal user account upon connecting.
  *
- * This hook is fired before a Drupal user account is created by the FBOAuth
- * module.
+ * This hook is fired before a Drupal user account is created by the Facebook
+ * OAuth module.
  *
  * @param $edit
  *   A user account array, not yet including the UID. Make modifications to this
@@ -85,8 +85,8 @@ function hook_fboauth_user_presave(&$edit, $fbuser) {
 /**
  * Hook to manually save Facebook data after a user has connected.
  *
- * This hook is fired after a Drupal user account is created by the FBOAuth
- * module.
+ * This hook is fired after a Drupal user account is created by the Facebook
+ * OAuth module.
  *
  * @param $account
  *   A full Drupal user account object.

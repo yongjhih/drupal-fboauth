@@ -29,7 +29,7 @@ function fboauth_profile_fields() {
 }
 
 /**
- * Add options for Profile module to the FBOAuth settings form.
+ * Add options for Profile module to the Facebook OAuth settings form.
  */
 function fboauth_profile_form_alter(&$form, &$form_state) {
   $properties = fboauth_user_properties(TRUE);
