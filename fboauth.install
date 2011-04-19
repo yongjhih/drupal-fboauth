@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Implementation of hook_install().
+ * @file
+ * Provides install and update functions for the FBOAuth module.
+ */
+
+/**
+ * Implements hook_install().
  */
 function fboauth_install() {
   drupal_install_schema('fboauth');
@@ -11,24 +16,32 @@ function fboauth_install() {
   _fboauth_change_user_mail_field();
 }
 
-function fboauth_uninstall() { 
+/**
+ * Implements hook_uninstall().
+ */
+function fboauth_uninstall() {
   drupal_uninstall_schema('fboauth');
   variable_del('fboauth_id');
   variable_del('fboauth_secret');
+  variable_del('fboauth_user_email');
+  variable_del('fboauth_user_username');
+  variable_del('fboauth_user_profile');
+  variable_del('fboauth_user_properties');
+  variable_del('fboauth_user_connections');
 }
 
-/** 
- * Implementation of hook_schema(). 
- */ 
-function fboauth_schema() { 
-  $schema['fboauth_users'] = array( 
-    'fields' => array( 
+/**
+ * Implements hook_schema().
+ */
+function fboauth_schema() {
+  $schema['fboauth_users'] = array(
+    'fields' => array(
       'uid'  => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-      ), 
+      ),
       'fbid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -42,11 +55,11 @@ function fboauth_schema() {
       'uid_fbid' => array('uid', 'fbid'),
     ),
   );
-  return $schema; 
+  return $schema;
 }
 
 /**
- * Implementation of hook_schema_alter()
+ * Implements of hook_schema_alter()
  */
 function fboauth_schema_alter(&$schema) {
   $schema['users']['fields']['mail']['length'] = 320;
@@ -68,3 +81,4 @@ function _fboauth_change_user_mail_field($action = 'install') {
   db_change_field($res, 'users', 'mail', 'mail', $schema['users']['fields']['mail']);
   return $res;
 }
+

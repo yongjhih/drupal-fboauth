@@ -13,7 +13,7 @@ function fboauth_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['admin/settings/fboauth'] = array(
-    'title' => t('FBoauth settings'),
+    'title' => t('FBOAuth settings'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fboauth_settings_form'),
     'access arguments' => array('administer users'),
@@ -52,7 +52,7 @@ function fboauth_block($op = 'list', $delta = '', $edit = array()) {
       $block = array();
       $app_id = variable_get('fboauth_id', '');
       if ($app_id && !fboauth_fbid_load()) {
-        $block['content'] = fboauth_action_display($app_id, 'connect');
+        $block['content'] = fboauth_action_display('connect', $app_id);
       }
       return $block;
   }
@@ -209,17 +209,20 @@ function fboauth_save($uid, $fbid) {
 }
 
 /**
- * Output a Facebook connect link.
+ * Output a Facebook link.
  *
  * This is simply a convience function for outputing a link. If wanting to
  * customize the display of the link, override the theme_fboauth_connect_link()
  * function in your theme.
  *
- * @see theme_fboauth_connect_link()
+ * @see theme_fboauth_action()
  */
-function fboauth_action_display($app_id, $action_name) {
+function fboauth_action_display($action_name, $app_id = NULL) {
+  // Use the default App ID if not specified.
+  $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
+
   $action = fboauth_action_load($action_name);
-  $link = fboauth_action_link_properties($app_id, $action_name);
+  $link = fboauth_action_link_properties($action_name, $app_id);
   $theme = isset($action['theme']) ? $action['theme'] : array('fboauth_action__' . $action_name, 'fboauth_action');
   return theme($theme, $action, $link);
 }
@@ -227,7 +230,7 @@ function fboauth_action_display($app_id, $action_name) {
 /**
  * Return a set of properties suitable for use to a url() call.
  */
-function fboauth_action_link_properties($app_id, $action_name) {
+function fboauth_action_link_properties($action_name, $app_id = NULL) {
   // Use the default App ID if not specified.
   $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
   $action = fboauth_action_load($action_name);
