@@ -13,12 +13,20 @@ function fboauth_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['admin/settings/fboauth'] = array(
-    'title' => t('FBOAuth settings'),
+    'title' => t('Facebook OAuth settings'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fboauth_settings_form'),
     'access arguments' => array('administer users'),
     'file' => 'includes/fboauth.admin.inc',
     'type' => MENU_NORMAL_ITEM,
+  );
+  $items['user/%user/fboauth'] = array(
+    'title' => t('Facebook settings'),
+    'page callback' => 'fboauth_user_settings',
+    'page arguments' => array(1),
+    'access callback' => 'user_edit_access',
+    'access arguments' => array(1),
+    'file' => 'includes/fboath.pages.inc',
   );
   return $items;
 }
@@ -34,6 +42,9 @@ function fboauth_theme() {
     ),
     'fboauth_action__connect' => array(
       'arguments' => array('action' => NULL, 'properties' => NULL),
+    ),
+    'fboauth_user_form_connect' => array(
+      'arguments' => array('uid' => NULL, 'fbid' => NULL),
     ),
   );
 }
@@ -99,6 +110,43 @@ function fboauth_user_update(&$edit, &$account, $category) {
 function fboauth_user_delete($account) {
   // Passing in a NULL $fbid deletes any existing associations.
   fboauth_save($account->uid, NULL);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
+  $uid = $form['#uid'];
+  $fbid = fboauth_fbid_load($uid);
+
+  $fboauth_form = array(
+    '#type' => 'item',
+    '#title' => t('Facebook connect'),
+    '#children' => theme('fboauth_user_form_connect', $uid, $fbid),
+  );
+
+  // The account settings move around in this form.
+  $account_form = isset($form['account']) ? $form['account'] : $form;
+
+  // Inject the Facebook options after the e-mail settings. No weights are on
+  // these elements by default, so we have to put it in order.
+  $temp_form = array();
+  foreach (element_children($account_form) as $child) {
+    $temp_form[$child] = $account_form[$child];
+    if ($child == 'mail') {
+      $fboauth_form['weight'] = $temp_form[$child]['#weight'];
+      $temp_form['fboauth'] = $fboauth_form;
+    }
+    unset($account_form[$child]);
+  }
+
+  $account_form += $temp_form;
+  if (isset($form['account'])) {
+    $form['account'] = $account_form;
+  }
+  else {
+    $form = $account_form;
+  }
 }
 
 /**
@@ -269,7 +317,8 @@ function fboauth_action_link_properties($action_name, $app_id = NULL) {
  * @param $link
  *   An array of properties to be used to generate a login link. Note that all
  *   provided properties are required for the Facebook login to succeed and
- *   must not be changed. If $link is FALSE, FBOAuth is not yet configured.
+ *   must not be changed. If $link is FALSE, Facebook OAuth is not yet
+ *   configured.
  * @see fboauth_link_properties()
  */
 function theme_fboauth_action($action, $link) {
@@ -284,10 +333,25 @@ function theme_fboauth_action($action, $link) {
  * @param $link
  *   An array of properties to be used to generate a login link. Note that all
  *   provided properties are required for the Facebook login to succeed and
- *   must not be changed. If $link is FALSE, FBOAuth is not yet configured.
+ *   must not be changed. If $link is FALSE, Facebook OAuth is not yet
+ *   configured.
  * @see fboauth_link_properties()
  */
 function theme_fboauth_action__connect($action, $link) {
   $url = url($link['href'], array('query' => $link['query']));
   return '<a href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="fblogin" /></a>';
+}
+
+/**
+ * Display the Facebook Connect options on a user's profile form.
+ */
+function theme_fboauth_user_form_connect($uid, $fbid) {
+  if ($fbid) {
+    $output = t('Your account is connected with Facebook. (<a href="!url">More info</a>)', array('!url' => url('user/' . $uid . '/fboauth')));
+  }
+  else {
+    $output = fboauth_action_display('connect');
+    $output .= '<div class="description">' . t('Connect your account with Facebook to simplify login.') . '</div>';
+  }
+  return $output;
 }
