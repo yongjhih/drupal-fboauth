@@ -33,8 +33,8 @@ Installation
    between your Profile fields and Facebook's available fields.
 
 5. You can enable the Facebook connect button either by enabling the included
-   FBOAuth block under "Administer" -> "Site building" -> "Blocks", or you can
-   print out the link manually in your theme with the following code:
+   Facebook OAuth block under "Administer" -> "Site building" -> "Blocks", or
+   you can print out the link manually in your theme with the following code:
 
    <?php print fboauth_action_display('connect'); ?>
 
@@ -51,8 +51,9 @@ information from Facebook you may read the sections on Theming and the APIs.
 
 Theming
 -------
-The FBOAuth module includes default theming connecting to Facebook. You can
-override this output (or any other output in FBOAuth) by doing the following:
+The Facebook OAuth module includes default theming connecting to Facebook. You
+can override this output (or any other output in Facebook OAuth) by doing the
+following:
 
 1. Copy the theme_fboauth_action__connect() function from fboauth.module file.
 
@@ -75,13 +76,13 @@ print l(t('Connect'), $link['href'], array('query' => $link['query']));
 
 API Integration
 ---------------
-The FBOAuth module provides an API for executing queries against Facebook's vast
-store of user data. However in order to use this API it is important to
-understand the basic concepts of OAuth. In short, the user (and only the user)
-is capable of granting your site access to query information against Facebook. 
-The user is also only able to do this on Facebook.com, so any requests to query 
-against Facebook must first redirect the user to Facebook where they can grant
-access. The full workflow looks like this:
+The Facebook OAuth module provides an API for executing queries against
+Facebook's vast store of user data. However in order to use this API it is
+important to understand the basic concepts of OAuth. In short, the user (and
+only the user) is capable of granting your site access to query information
+against Facebook. The user is also only able to do this on Facebook.com, so any
+requests to query against Facebook must first redirect the user to Facebook
+where they can grant access. The full workflow looks like this:
 
 1. The user clicks on a link (such as the Facebook Connect button) that sends
    the user to Facebook. If the link is requesting permissions that the user has
@@ -102,14 +103,15 @@ access. The full workflow looks like this:
    will renew the existing token or generate a new one.
 
 So all in all, this is a lot of back and forth between your site and Facebook
-before you can query a user's information. Fortunately the FBOAuth module
+before you can query a user's information. Fortunately the Facebook OAuth module
 handles all of the back and forth and gives you the necessary access token. All
-you need to do is register a function with FBOAuth and it does all the work of
-getting you access. You just write the query and import necessary information.
+you need to do is register a function with Facebook OAuth and it does all the
+work of getting you access. You just write the query and import necessary
+information.
 
-Integrating with FBOAuth requires writing a module (though it can just be a few
-lines). If you help writing a module, the Examples module is a good introduction
-to writing modules: http://drupal.org/project/examples.
+Integrating with Facebook OAuth requires writing a module (though it can just be
+a few lines). If you help writing a module, the Examples module is a good
+introduction to writing modules: http://drupal.org/project/examples.
 
 In your module file, you first need to implement hook_fboauth_actions() such as 
 this:
@@ -153,7 +155,7 @@ Then write your function specified as the "callback" in the above hook.
 
 <?php
 /**
- * FBOAuth action callback; Import a user's Facebook photos.
+ * Facebook OAuth action callback; Import a user's Facebook photos.
  */
 function mymodule_fboauth_action_photo_import($app_id, $access_token) {
   // Query against the Facebook Graph API. See the Facebook API for a list of
@@ -184,7 +186,7 @@ Now when the user clicks on the output link, they will have the option of
 granting access to the requested information. If they approve, your callback
 function will be executed.
 
-More information about FBOAuth's other hooks are documented in the 
+More information about Facebook OAuth's other hooks are documented in the 
 fboauth.api.php file included with this module.
 
 Support

@@ -147,4 +147,28 @@ function fboauth_settings_form_submit($form, &$form_state) {
   // Clean up saved checkbox values.
   variable_set('fboauth_user_properties', array_values(array_filter($form_state['values']['fboauth_user_properties'])));
   variable_set('fboauth_user_connections', array_values(array_filter($form_state['values']['fboauth_user_connections'])));
+
+  drupal_set_message(t('The configuration options have been saved.'));
+}
+
+/**
+ * User settings page for Facebook OAuth.
+ *
+ * Note that currently this is not a form, it's just a normal page.
+ */
+function fboauth_user_form($account) {
+  module_load_include('inc', 'fboauth', 'includes/fboauth.fboauth');
+  return theme('fboauth_user_info', $account);
+}
+
+/**
+ * Provided themed information about the user's current Facebook connection.
+ */
+function theme_fboauth_user_info($account) {
+  $output = '';
+  $output .= '<p>' . t('Your account is current connected with Facebook. Currently this site has access to the following information from Facebook.') . '</p>';
+  $output .= theme('item_list', array('basic' => t('Your basic information (Name, Gender, Picture, etc.)')) + fboauth_user_connect_permissions());
+  $output .= '<p>' . t('You may disconnect your account from Facebook at any time by using the Deauthorize option below. If deauthorized, you will no longer be able to use Facebook to log into this account and must use a normal password. <strong>If you have not yet set a password, you will not be able to log onto this site</strong>.') . '</p>';
+  $output .= fboauth_action_display('deauth');
+  return $output;
 }

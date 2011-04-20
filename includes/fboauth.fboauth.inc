@@ -69,23 +69,43 @@ function fboauth_action_invoke($action_name, $app_id, $access_token) {
  * Facebook OAuth callback for initiating a Facebook connection.
  */
 function fboauth_action_connect($app_id, $access_token) {
+  global $user;
+
   $fbuser = fboauth_graph_query('me', $access_token);
   $uid = fboauth_uid_load($fbuser->id);
   // If the user has logged in before, load their account and login.
-  if ($uid && ($account = user_load($uid))) {
+  if (!$user->uid && $uid && ($account = user_load($uid))) {
     user_external_login($account);
+  }
+  // If the Facebook e-mail address matches an existing account, bind them
+  // together and log in as that account.
+  elseif (!empty($fbuser->email) && ($account = user_load(array('mail' => $fbuser->email)))) {
+    fboauth_save($account->uid, $fbuser->id);
+    // Logins will be denied if the user's account is blocked.
+    if (user_external_login($account)) {
+      drupal_set_message(t('You\'ve connected your account with Facebook.'));
+    }
   }
   else {
     // If the user is already logged in, associate the two accounts.
-    if (user_is_logged_in()) {
+    if ($user->uid) {
       fboauth_save($user->uid, $fbuser->id);
+      drupal_set_message(t('You\'ve connected your account with Facebook.'));
     }
     // Register a new user only if allowed.
-    else if (variable_get('user_register', 1)) {
+    elseif (variable_get('user_register', 1)) {
       $account = fboauth_create_user($fbuser);
       // Load the account fresh just to have a fully-loaded object.
       $account = user_load($account->uid);
-      user_external_login($account);
+
+      // Logins will be denied if the user's account is blocked.
+      if (user_external_login($account)) {
+        drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
+      }
+    }
+    // Since user's can't create new accounts on their own, show an error.
+    else {
+      drupal_set_message('You must first log in before you can connect your account to Facebook.');
     }
   }
 }
@@ -94,7 +114,20 @@ function fboauth_action_connect($app_id, $access_token) {
  * Facebook OAuth callback for deauthorizing the site from Facebook.
  */
 function fboauth_action_deauth($app_id, $access_token) {
-  fboauth_method_invoke('auth.revokeAuthorization', $access_token);
+  global $user;
+
+  // Deauthorize our application from Facebook.
+  $result = fboauth_method_invoke('auth.revokeAuthorization', $access_token);
+
+  // If successful, also remove the uid-fbid pairing.
+  if (!is_array($result) && $result) {
+    fboauth_save($user->uid, NULL);
+    drupal_set_message(t('Your account has been disconnected from Facebook.'));
+  }
+  else {
+    drupal_set_message(t('There was an error disconnecting from Facebook. The server returned %message.', array('%message' => $result->error_msg)), 'error');
+    watchdog('There was an error disconnecting the user %username from Facebook. The server returned %message.', array('%message' => $result->error_msg, '%username' => $user->name));
+  }
 }
 
 /**
@@ -104,7 +137,12 @@ function fboauth_create_user($fbuser) {
   // Use their Facebook user name (if defined), otherwise their real name.
   // If an account already exists with that name, increment until the namespace
   // is available.
-  $username = empty($fbuser->username) ? $fbuser->name : $fbuser->username;
+  if (variable_get('fboauth_user_username', 'username') == 'username' && !empty($fbuser->username)) {
+    $username = $fbuser->username;
+  }
+  else {
+    $username = $fbuser->name;
+  }
   $query = "SELECT uid FROM {users} WHERE name = '%s'";
   $uid = db_result(db_query($query, $username));
   $i = 0;
@@ -119,7 +157,7 @@ function fboauth_create_user($fbuser) {
   // Initialize basic properties that are unlikely to need changing.
   $edit = array(
     'name' => $username,
-    'mail' => $fbuser->email,
+    'mail' => !empty($fbuser->email) ? $fbuser->email : '',
     'status' => 1,
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
@@ -238,18 +276,50 @@ function fboauth_access_token($code, $action_name, $app_id = NULL, $app_secret =
  */
 function fboauth_user_permissions($access_requested = NULL) {
   $permissions = array();
+  $permission_names = array(
+    'user_about_me' => t('About yourself description'),
+    'user_activities' => t('Your activities'),
+    'user_birthday' => t('Your birthday'),
+    'user_education_history' => t('Your education history'),
+    'user_events' => t('Events you\'re attending'),
+    'user_groups' => t('Your groups'),
+    'user_hometown' => t('Your hometown'),
+    'user_interests' => t('Your interests'),
+    'user_likes' => t('Your likes'),
+    'user_location' => t('Your location'),
+    'user_notes' => t('Your notes'),
+    'user_online_presence' => t('Your online/offline status'),
+    'user_photo_video_tags' => t('Photos and videos you\'ve been tagged in'),
+    'user_photos' => t('Photos you\'ve uploaded'),
+    'user_relationships' => t('Access to your family and personal relationships and relationship status'),
+    'user_relationship_details' => t('Your relationship preferences'),
+    'user_religion_politics' => t('Your religious and political affiliations'),
+    'user_status' => t('Your most recent status message'),
+    'user_videos' => t('Videos you\'ve uploaded'),
+    'user_website' => t('Your website URL'),
+    'user_work_history' => t('Your work history'),
+    'email' => t('Your e-mail'),
+    'read_friendlists' => t('Access your lists of friends'),
+    'read_insights' => t('Access your Facebook insights data'),
+    'read_mailbox' => t('Access your Facebook inbox'),
+    'read_requests' => t('Access your friend requests'),
+    'read_stream' => t('Access your new feed'),
+    'xmpp_login' => t('Log you into Facebook chat'),
+    'ads_management' => t('Manage your ads'),
+    'user_checkins' => t('Access check-in information'),
+  );
 
   $properties = fboauth_user_properties();
   foreach ($properties as $property => $property_info) {
     if (isset($property_info['permission']) && (!isset($access_requested) || in_array($property, $access_requested))) {
-      $permissions[$property_info['permission']] = $property_info['permission'];
+      $permissions[$property_info['permission']] = isset($permission_names[$property_info['permission']]) ? $permission_names[$property_info['permission']] : $property_info['permission'];
     }
   }
 
   $connections = fboauth_user_connections();
   foreach ($connections as $connection => $connection_info) {
     if (isset($connection_info['permission']) && (!isset($access_requested) || in_array($connection, $access_requested))) {
-      $permissions[$connection_info['permission']] = $connection_info['permission'];
+      $permissions[$connection_info['permission']] = isset($permission_names[$connection_info['permission']]) ? $permission_names[$connection_info['permission']] : $connection_info['permission'];
     }
   }
 
@@ -369,6 +439,21 @@ function fboauth_user_connections() {
 }
 
 /**
+ * Utility function to retrieve all permissions required for Facebook connect.
+ */
+function fboauth_user_connect_permissions() {
+  $connect_permissions = array();
+  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_email', TRUE) ? array('email') : array());
+  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_properties', array()));
+  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_connections', array()));
+
+  if (module_exists('profile')) {
+    $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_profile', array()));
+  }
+  return $connect_permissions;
+}
+
+/**
  * Execute a Graph API query through Facebook.
  *
  * @see http://developers.facebook.com/docs/reference/api/
@@ -389,6 +474,8 @@ function fboauth_method_invoke($method, $access_token, $parameters = array()) {
   if (!isset($parameters['app_id'])) {
     $parameters['app_id'] = variable_get('fboauth_id', '');
   }
+
+  $parameters['access_token'] = $access_token;
 
   // Keep all results in JSON for simplicity.
   $parameters['format'] = 'json';

@@ -17,16 +17,16 @@ function fboauth_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fboauth_settings_form'),
     'access arguments' => array('administer users'),
-    'file' => 'includes/fboauth.admin.inc',
+    'file' => 'includes/fboauth.pages.inc',
     'type' => MENU_NORMAL_ITEM,
   );
   $items['user/%user/fboauth'] = array(
     'title' => t('Facebook settings'),
-    'page callback' => 'fboauth_user_settings',
+    'page callback' => 'fboauth_user_form',
     'page arguments' => array(1),
     'access callback' => 'user_edit_access',
     'access arguments' => array(1),
-    'file' => 'includes/fboath.pages.inc',
+    'file' => 'includes/fboauth.pages.inc',
   );
   return $items;
 }
@@ -46,6 +46,10 @@ function fboauth_theme() {
     'fboauth_user_form_connect' => array(
       'arguments' => array('uid' => NULL, 'fbid' => NULL),
     ),
+    'fboauth_user_info' => array(
+      'arguments' => array('account' => NULL),
+      'file' => 'includes/fboauth.pages.inc',
+    ),
   );
 }
 
@@ -61,9 +65,8 @@ function fboauth_block($op = 'list', $delta = '', $edit = array()) {
       return $blocks;
     case 'view':
       $block = array();
-      $app_id = variable_get('fboauth_id', '');
       if ($app_id && !fboauth_fbid_load()) {
-        $block['content'] = fboauth_action_display('connect', $app_id);
+        $block['content'] = fboauth_action_display('connect');
       }
       return $block;
   }
@@ -155,20 +158,11 @@ function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
 function fboauth_fboauth_actions() {
   $actions = array();
 
-  $connect_permissions = array();
-  $connect_permissions += variable_get('fboauth_user_email', TRUE) ? array('email' => 'email') : array();
-  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_properties', array()));
-  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_connections', array()));
-
-  if (module_exists('profile')) {
-    $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_profile', array()));
-  }
-
   $actions['connect'] = array(
     'title' => t('Connect'),
     'file' => 'includes/fboauth.login.inc',
     'callback' => 'fboauth_action_connect',
-    'permissions' => $connect_permissions,
+    'permissions' => array_keys(fboauth_user_connect_permissions()),
     'theme callback' => 'fboauth_connect_link',
   );
   $actions['deauth'] = array(
@@ -250,7 +244,18 @@ function fboauth_uid_load($fbid) {
  * Passing in NULL for $fbid can also be used to delete a UID to FBID pairing.
  */
 function fboauth_save($uid, $fbid) {
-  db_query('DELETE FROM {fboauth_users} WHERE uid = %d', $uid);
+  // Delete the existing Facebook ID if present for this Drupal user.
+  $delete_query = 'DELETE FROM {fboauth_users} WHERE uid = %d';
+  $delete_arguments = array($uid);
+
+  // If setting a new Facebook ID for an account, also make sure no other
+  // Drupal account is connected with this Facebook ID.
+  if (isset($fbid)) {
+    $delete_query .= ' OR fbid = %d';
+    $delete_arguments[] = $fbid;
+  }
+
+  db_query($delete_query, $delete_arguments);
   if (!empty($fbid)) {
     db_query('INSERT INTO {fboauth_users} (uid, fbid) VALUES (%d, %d)', $uid, $fbid);
   }
@@ -263,14 +268,25 @@ function fboauth_save($uid, $fbid) {
  * customize the display of the link, override the theme_fboauth_connect_link()
  * function in your theme.
  *
+ * @param $action_name
+ *   The name of the action to display (usually as a link or button). Facebook
+ *   OAuth includes the "connect" and "deauth" actions by default.
+ * @param $redirect
+ *   An optional URL to redirect the user to after the action is completed. Note
+ *   that if a destination is set in the URL through $_GET['destination'], that
+ *   destination will take precedence.
+ * @param $app_id
+ *   The optional Facebook App ID under which this action will be executed. If
+ *   omitted the default App ID is used.
+ *
  * @see theme_fboauth_action()
  */
-function fboauth_action_display($action_name, $app_id = NULL) {
+function fboauth_action_display($action_name, $redirect = NULL, $app_id = NULL) {
   // Use the default App ID if not specified.
   $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
 
   $action = fboauth_action_load($action_name);
-  $link = fboauth_action_link_properties($action_name, $app_id);
+  $link = fboauth_action_link_properties($action_name, $redirect, $app_id);
   $theme = isset($action['theme']) ? $action['theme'] : array('fboauth_action__' . $action_name, 'fboauth_action');
   return theme($theme, $action, $link);
 }
@@ -278,7 +294,7 @@ function fboauth_action_display($action_name, $app_id = NULL) {
 /**
  * Return a set of properties suitable for use to a url() call.
  */
-function fboauth_action_link_properties($action_name, $app_id = NULL) {
+function fboauth_action_link_properties($action_name, $redirect = NULL, $app_id = NULL) {
   // Use the default App ID if not specified.
   $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
   $action = fboauth_action_load($action_name);
@@ -290,16 +306,25 @@ function fboauth_action_link_properties($action_name, $app_id = NULL) {
   elseif (!empty($action['properties']) || !empty($action['connections'])) {
     $properties = $action['properties'];
     $connections = $action['connections'];
-    $permissions = fboauth_user_permissions(array_merge($properties, $connections));
+    $permissions = array_keys(fboauth_user_permissions(array_merge($properties, $connections)));
   }
   else {
     $permissions = array();
   }
 
+  // Build the retun query string.
+  $query = array();
+  if (isset($redirect)) {
+    $query['destination'] = $redirect;
+  }
+  elseif (!empty($_GET['destination'])) {
+    $query['destination'] = $_GET['destination'];
+  }
+
   $return = array(
     'query' => array(
       'client_id' => $app_id,
-      'redirect_uri' => url('fboauth/connect', array('absolute' => TRUE, 'query' => !empty($_GET['destination']) ? array('destination' => $_GET['destination']) : array())),
+      'redirect_uri' => url('fboauth/' . $action_name, array('absolute' => TRUE, 'query' => $query)),
     ),
     'href' => 'https://www.facebook.com/dialog/oauth',
   );
@@ -322,8 +347,15 @@ function fboauth_action_link_properties($action_name, $app_id = NULL) {
  * @see fboauth_link_properties()
  */
 function theme_fboauth_action($action, $link) {
+  // Because most Facebook actions initiate one-time actions, render it as a
+  // button instead of a link. This makes for expected behavior that buttons
+  // execute actions, not links.
+  $link['attributes']['class'] = isset($link['attributes']['class']) ? $link['attributes']['class'] : 'form-button facebook-button facebook-action-' . str_replace('_', '-', $action['name']);
+  $link['attributes']['name'] = isset($link['attributes']['name']) ? $link['attributes']['name'] : 'facebook_action_' . $action['name'];
+  $link['attributes']['type'] = 'button';
+  $attributes = drupal_attributes($link['attributes']);
   $url = url($link['href'], array('query' => $link['query']));
-  $content = '<input type="button" onclick="javascript: window.location = ' . $url . '; return false;" value="' . check_plain($action['title']) . '" />';
+  $content = '<button ' . $attributes . ' onclick="window.location = \'' . $url . '\'; return false;">' . check_plain($action['title']) . '</button>';
   return $content;
 }
 
@@ -339,7 +371,9 @@ function theme_fboauth_action($action, $link) {
  */
 function theme_fboauth_action__connect($action, $link) {
   $url = url($link['href'], array('query' => $link['query']));
-  return '<a href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="fblogin" /></a>';
+  $link['attributes']['class'] = isset($link['attributes']['class']) ? $link['attributes']['class'] : 'facebook-action-connect';
+  $attributes = isset($link['attributes']) ? drupal_attributes($link['attributes']) : '';
+  return '<a ' . $attributes . ' href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="' . check_plain($link['title']) . '" /></a>';
 }
 
 /**
@@ -351,7 +385,7 @@ function theme_fboauth_user_form_connect($uid, $fbid) {
   }
   else {
     $output = fboauth_action_display('connect');
-    $output .= '<div class="description">' . t('Connect your account with Facebook to simplify login.') . '</div>';
+    $output .= '<div class="description">' . t('Connect with Facebook to login with your Facebook account instead of a password.') . '</div>';
   }
   return $output;
 }

@@ -53,7 +53,7 @@ function fboauth_profile_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Submit handler for the FBOAuth settings form.
+ * Submit handler for the Facebook OAuth settings form.
  */
 function fboauth_profile_form_submit(&$form, &$form_state) {
   variable_set('fboauth_user_profile', array_filter($form_state['values']['fboauth_user_profile']));
@@ -81,11 +81,17 @@ function fboauth_profile_create_user(&$edit, $fbuser) {
           }
           break;
         case 'selection':
+          // We can't import anything other than strings into selects.
+          if (!is_string($fbuser->$facebook_property_name)) {
+            break;
+          }
+
           // Mapping options is tricky business. We loop through all available
           // options and choose the closest one to match the incoming value.
           $options = explode("\n", $profile_field['options']);
           $best_match = 0.0;
           $best_option = NULL;
+          $fb_option = is_string($fbuser->$facebook_property_name) ? $fbuser->$facebook_property_name : '';
           $match_fb = strtolower($fbuser->$facebook_property_name);
           foreach ($options as $option) {
             $option = trim($option);
@@ -106,6 +112,11 @@ function fboauth_profile_create_user(&$edit, $fbuser) {
         case 'list':
         case 'url':
         default:
+          // We can't import anything other than strings into textfields.
+          if (!is_string($fbuser->$facebook_property_name)) {
+            break;
+          }
+
           $edit[$profile_field_name] = $fbuser->$facebook_property_name;
           break;
       }
