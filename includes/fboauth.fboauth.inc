@@ -181,10 +181,10 @@ function fboauth_create_user($fbuser) {
   if ($account->uid) {
     $path = file_create_path('pictures');
     file_check_directory($path, FILE_CREATE_DIRECTORY);
-    $picture = file_get_contents('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
+    $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
     $picture_path = $path . '/picture-' . $account->uid . '.jpg';
     $file = fopen($picture_path, 'w');
-    fwrite($file, $picture);
+    fwrite($file, $picture_result->data);
     fclose($file);
 
     // Check to make sure the picture isn't too large for the site settings.
