@@ -458,8 +458,10 @@ function fboauth_user_connect_permissions() {
  *
  * @see http://developers.facebook.com/docs/reference/api/
  */
-function fboauth_graph_query($id, $access_token, $parameters) {
-  $graph_url = url('https://graph.facebook.com/' . $id, array('absolute' => TRUE, 'query' => array('access_token' => $access_token)));
+function fboauth_graph_query($id, $access_token, $parameters = array()) {
+  $parameters['access_token'] = $access_token;
+
+  $graph_url = url('https://graph.facebook.com/' . $id, array('absolute' => TRUE, 'query' => $parameters));
   $graph_result = drupal_http_request($graph_url);
   return json_decode($graph_result->data);
 }
