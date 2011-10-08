@@ -52,13 +52,6 @@ function fboauth_settings_form(&$form_state) {
     '#default_value' => variable_get('fboauth_user_username', 'username'),
   );
 
-  $form['fboauth_user_profile'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Profile field mapping'),
-    '#description' => t('Each of your Profile fields are listed below. Map each one you would like to import into your site to a Facebook data source.'),
-    '#tree' => TRUE,
-  );
-
   // If Profile module exists, allow mapping of individual properties.
   if (module_exists('profile')) {
     module_load_include('inc', 'fboauth', 'includes/fboauth.profile');
@@ -72,6 +65,7 @@ function fboauth_settings_form(&$form_state) {
     '#collapsed' => TRUE,
     '#description' => t('If using profile mapping, the necessary permissions will automatically requested and these settings do not need adjustment. If handling mapping manually or integrating with a custom module, you may request additional permissions for your application here. Requesting more information from users may make them less likely to trust your website. Adding additional permissions after a user has connected will require additional confirmation of the new permissions upon next login. For more information about properties these, read the <a href="http://developers.facebook.com/docs/reference/api/user/">Facebook User API</a>. Note that enabling more permissions here <strong>does not import more data</strong>. It just makes this information available for you to access in a custom module.'),
     '#tree' => FALSE,
+    '#weight' => 20,
   );
 
   $properties = fboauth_user_properties();

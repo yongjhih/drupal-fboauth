@@ -37,6 +37,14 @@ function fboauth_profile_fields() {
  * Add options for Profile module to the Facebook OAuth settings form.
  */
 function fboauth_profile_form_alter(&$form, &$form_state) {
+  $form['fboauth_user_profile'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Profile field mapping'),
+    '#description' => t('Each of your Profile fields are listed below. Map each one you would like to import into your site to a Facebook data source. <strong>Note that only profile fields configured to show on the user registration form may be imported!</strong>'),
+    '#tree' => TRUE,
+    '#weight' => 5,
+  );
+
   $properties = fboauth_user_properties(TRUE);
   $property_options = array('' => t('- Do not import -'));
   foreach ($properties as $property => $property_info) {

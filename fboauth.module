@@ -380,7 +380,8 @@ function theme_fboauth_action__connect($variables) {
   $url = url($link['href'], array('query' => $link['query']));
   $link['attributes']['class'] = isset($link['attributes']['class']) ? $link['attributes']['class'] : 'facebook-action-connect';
   $attributes = isset($link['attributes']) ? drupal_attributes($link['attributes']) : '';
-  return '<a ' . $attributes . ' href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="' . check_plain($link['title']) . '" /></a>';
+  $title = isset($link['title']) ? check_plain($link['title']) : '';
+  return '<a ' . $attributes . ' href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="' . $title . '" /></a>';
 }
 
 /**
