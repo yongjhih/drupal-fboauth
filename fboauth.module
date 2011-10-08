@@ -59,17 +59,32 @@ function fboauth_theme() {
 function fboauth_block($op = 'list', $delta = '', $edit = array()) {
   switch ($op) {
     case 'list':
-      $blocks['login'] = array(
-        'info' => t('Facebook login'),
-      );
-      return $blocks;
+      return fboauth_block_info();
     case 'view':
-      $block = array();
-      if ($app_id && !fboauth_fbid_load()) {
-        $block['content'] = fboauth_action_display('connect');
-      }
-      return $block;
+      return fboauth_block_view($delta);
   }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function fboauth_block_info() {
+  $blocks['login'] = array(
+    'info' => t('Facebook login'),
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function fboauth_block_view($delta) {
+  $block = array();
+  $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
+  if ($app_id && !fboauth_fbid_load()) {
+    $block['content'] = fboauth_action_display('connect');
+  }
+  return $block;
 }
 
 /**
