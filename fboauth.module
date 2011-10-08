@@ -152,7 +152,9 @@ function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
   foreach (element_children($account_form) as $child) {
     $temp_form[$child] = $account_form[$child];
     if ($child == 'mail') {
-      $fboauth_form['weight'] = $temp_form[$child]['#weight'];
+      if (isset($temp_form[$child]['#weight'])) {
+        $fboauth_form['#weight'] = $temp_form[$child]['#weight'];
+      }
       $temp_form['fboauth'] = $fboauth_form;
     }
     unset($account_form[$child]);
@@ -388,7 +390,8 @@ function theme_fboauth_action__connect($action, $link) {
   $url = url($link['href'], array('query' => $link['query']));
   $link['attributes']['class'] = isset($link['attributes']['class']) ? $link['attributes']['class'] : 'facebook-action-connect';
   $attributes = isset($link['attributes']) ? drupal_attributes($link['attributes']) : '';
-  return '<a ' . $attributes . ' href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="' . check_plain($link['title']) . '" /></a>';
+  $title = isset($link['title']) ? check_plain($link['title']) : '';
+  return '<a ' . $attributes . ' href="' . $url . '"><img src="http://static.ak.fbcdn.net/images/fbconnect/login-buttons/connect_light_medium_short.gif" alt="' . $title . '" /></a>';
 }
 
 /**
