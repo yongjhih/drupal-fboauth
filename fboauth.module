@@ -160,14 +160,14 @@ function fboauth_fboauth_actions() {
 
   $actions['connect'] = array(
     'title' => t('Connect'),
-    'file' => 'includes/fboauth.login.inc',
+    'file' => 'includes/fboauth.fboauth.inc',
     'callback' => 'fboauth_action_connect',
     'permissions' => array_keys(fboauth_user_connect_permissions()),
     'theme callback' => 'fboauth_connect_link',
   );
   $actions['deauth'] = array(
     'title' => t('Deauthorize'),
-    'file' => 'includes/fboauth.login.inc',
+    'file' => 'includes/fboauth.fboauth.inc',
     'callback' => 'fboauth_action_deauth',
     'theme callback' => 'fboauth_deauth_link',
   );
