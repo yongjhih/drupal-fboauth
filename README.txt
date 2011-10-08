@@ -17,11 +17,10 @@ Installation
 
 2. Copy the entire fboauth directory the Drupal sites/all/modules directory.
 
-3. Login as an administrator. Enable the module in the "Administer" -> "Site
-   Building" -> "Modules"
+3. Login as an administrator. Enable the module on the Modules page.
 
-4. Configure the Facebook OAuth module settings under "Administer" -> "Site
-   configuration" -> "Facebook OAuth settings". Copy and paste the App ID and
+4. Configure the Facebook OAuth module settings under "Configuration" ->
+   "People" -> "Facebook OAuth settings". Copy and paste the App ID and
    App Secret from your newly created Facebook application's settings.
 
    Note that it is highly recommended to request access to the Facebook user's
@@ -33,8 +32,8 @@ Installation
    between your Profile fields and Facebook's available fields.
 
 5. You can enable the Facebook connect button either by enabling the included
-   Facebook OAuth block under "Administer" -> "Site building" -> "Blocks", or
-   you can print out the link manually in your theme with the following code:
+   Facebook OAuth block under "Structure" -> "Blocks", or you can print out the
+   link manually in your theme with the following code:
 
    <?php print fboauth_action_display('connect'); ?>
 
@@ -192,4 +191,4 @@ fboauth.api.php file included with this module.
 Support
 -------
 Please use the issue queue for filing bugs with this module at
-http://drupal.org/project/issues/1131300?categories=All
+http://drupal.org/project/issues/fboauth?categories=All
