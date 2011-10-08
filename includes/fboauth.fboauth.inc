@@ -351,21 +351,66 @@ function fboauth_user_permissions($access_requested = NULL) {
  */
 function fboauth_user_properties($include_common = FALSE) {
   $properties = array(
-    'about' => array('permission' => 'user_about_me', 'label' => t('About me (a short bio)')),
-    'bio' => array('permission' => 'user_about_me', 'label' => t('Biography')),
-    'birthday' => array('permission' => 'user_birthday', 'label' => t('Birthday')),
-    'education' => array('permission' => 'user_education_history', 'label' => t('Education history')),
-    'email' => array('permission' => 'email', 'label' => t('E-mail')),
-    'hometown' => array('permission' => 'user_hometown', 'label' => t('Hometown')),
-    'location' => array('permission' => 'user_location', 'label' => t('Location')),
-    'relationship_status' => array('permission' => 'user_relationships', 'label' => t('Relationship status (Single, Married, It\'s complicated, etc.)')),
-    'interested_in' => array('permission' => 'user_relationship_details', 'label' => t('Interested in (Men, Women)')),
-    'significant_other' => array('permission' => 'user_relationship_details', 'label' => t('Signficant other')),
-    'political' => array('permission' => 'user_religion_politics', 'label' => t('Political view')),
-    'quotes' => array('permission' => 'user_about_me', 'label' => t('Favorite quotes')),
-    'religion' => array('permission' => 'user_religion_politics', 'label' => t('Religion')),
-    'website' => array('permission' => 'user_website', 'label' => t('Website')),
-    'work' => array('permission' => 'user_work_history', 'label' => t('Work history')),
+    'about' => array(
+      'permission' => 'user_about_me',
+      'label' => t('About me (a short bio)'),
+    ),
+    'bio' => array(
+      'permission' => 'user_about_me',
+      'label' => t('Biography'),
+    ),
+    'birthday' => array(
+      'permission' => 'user_birthday',
+      'label' => t('Birthday'),
+    ),
+    'education' => array(
+      'permission' => 'user_education_history',
+      'label' => t('Education history'),
+    ),
+    'email' => array(
+      'permission' => 'email',
+      'label' => t('E-mail'),
+    ),
+    'hometown' => array(
+      'permission' => 'user_hometown',
+      'label' => t('Hometown'),
+    ),
+    'location' => array(
+      'permission' => 'user_location',
+      'label' => t('Location'),
+    ),
+    'relationship_status' => array(
+      'permission' => 'user_relationships',
+      'label' => t('Relationship status (Single, Married, It\'s complicated, etc.)'),
+    ),
+    'interested_in' => array(
+      'permission' => 'user_relationship_details',
+      'label' => t('Interested in (Men, Women)'),
+    ),
+    'significant_other' => array(
+      'permission' => 'user_relationship_details',
+      'label' => t('Signficant other'),
+    ),
+    'political' => array(
+      'permission' => 'user_religion_politics',
+      'label' => t('Political view'),
+    ),
+    'quotes' => array(
+      'permission' => 'user_about_me',
+      'label' => t('Favorite quotes'),
+    ),
+    'religion' => array(
+      'permission' => 'user_religion_politics',
+      'label' => t('Religion'),
+    ),
+    'website' => array(
+      'permission' => 'user_website',
+      'label' => t('Website'),
+    ),
+    'work' => array(
+      'permission' => 'user_work_history',
+      'label' => t('Work history'),
+    ),
   );
 
   if ($include_common) {
@@ -410,31 +455,106 @@ function fboauth_user_properties($include_common = FALSE) {
  */
 function fboauth_user_connections() {
   return array(
-    'accounts' => array('permission' => 'manage_pages', 'label' => t('Account pages')),
-    'activities' => array('permission' => 'user_activities', 'label' => t('Activities')),
-    'apprequests' => array('label' => t('App requests')), // No permission.
-    'albums' => array('permission' => 'user_photos', 'label' => t('Photo albums')),
-    'books' => array('permission' => 'user_likes', 'label' => t('Books liked')),
-    'checkins' => array('permission' => 'user_checkins', 'label' => t('Check-ins')),
-    'events' => array('permission' => 'user_events', 'label' => t('Events')),
-    'feed' => array('permission' => 'read_stream', 'label' => t('User\'s wall')),
-    'friendlists' => array('permission' => 'read_friendlists', 'label' => t('Lists of friends')),
-    'home' => array('permission' => 'read_stream', 'label' => t('User\'s news feed')),
-    'inbox' => array('permission' => 'read_mailbox', 'label' => t('Inbox threads')),
-    'interests' => array('permission' => 'user_interests', 'label' => t('Interests')),
-    'likes' => array('permission' => 'user_likes', 'label' => t('Pages liked')),
-    'links' => array('permission' => 'read_stream', 'label' => t('Posted links')),
-    'movies' => array('permission' => 'user_likes', 'label' => t('Movies liked')),
-    'music' => array('permission' => 'user_likes', 'label' => t('Music liked')),
-    'notes' => array('permission' => 'read_stream', 'label' => t('Notes')),
-    'outbox' => array('permission' => 'read_mailbox', 'label' => t('Outbox')),
-    'photos' => array('permission' => 'user_photos', 'label' => t('Photos')),
-    'posts' => array('permission' => 'read_stream', 'label' => t('Posts')),
-    'statuses' => array('permission' => 'read_stream', 'label' => t('Status updates')),
-    'tagged' => array('permission' => 'read_stream', 'label' => t('Tagged in photos, videos, and posts')),
-    'television' => array('permission' => 'user_likes', 'label' => t('Television liked')),
-    'updates' => array('permission' => 'read_mailbox', 'label' => t('Inbox updates')),
-    'videos' => array('permission' => 'user_videos', 'label' => t('Videos')),
+    'accounts' => array(
+      'permission' => 'manage_pages',
+      'label' => t('Account pages'),
+    ),
+    'activities' => array(
+      'permission' => 'user_activities',
+      'label' => t('Activities'),
+    ),
+    'apprequests' => array(
+      'label' => t('App requests'),
+      // No permission.
+    ),
+    'albums' => array(
+      'permission' => 'user_photos',
+      'label' => t('Photo albums'),
+    ),
+    'books' => array(
+      'permission' => 'user_likes',
+      'label' => t('Books liked'),
+    ),
+    'checkins' => array(
+      'permission' => 'user_checkins',
+      'label' => t('Check-ins'),
+    ),
+    'events' => array(
+      'permission' => 'user_events',
+      'label' => t('Events'),
+    ),
+    'feed' => array(
+      'permission' => 'read_stream',
+      'label' => t('User\'s wall'),
+    ),
+    'friendlists' => array(
+      'permission' => 'read_friendlists',
+      'label' => t('Lists of friends'),
+    ),
+    'home' => array(
+      'permission' => 'read_stream',
+      'label' => t('User\'s news feed'),
+    ),
+    'inbox' => array(
+      'permission' => 'read_mailbox',
+      'label' => t('Inbox threads'),
+    ),
+    'interests' => array(
+      'permission' => 'user_interests',
+      'label' => t('Interests'),
+    ),
+    'likes' => array(
+      'permission' => 'user_likes',
+      'label' => t('Pages liked'),
+    ),
+    'links' => array(
+      'permission' => 'read_stream',
+      'label' => t('Posted links'),
+    ),
+    'movies' => array(
+      'permission' => 'user_likes',
+      'label' => t('Movies liked'),
+    ),
+    'music' => array(
+      'permission' => 'user_likes',
+      'label' => t('Music liked'),
+    ),
+    'notes' => array(
+      'permission' => 'read_stream',
+      'label' => t('Notes'),
+    ),
+    'outbox' => array(
+      'permission' => 'read_mailbox',
+      'label' => t('Outbox'),
+    ),
+    'photos' => array(
+      'permission' => 'user_photos',
+      'label' => t('Photos'),
+    ),
+    'posts' => array(
+      'permission' => 'read_stream',
+      'label' => t('Posts'),
+    ),
+    'statuses' => array(
+      'permission' => 'read_stream',
+      'label' => t('Status updates'),
+    ),
+    'tagged' => array(
+      'permission' => 'read_stream',
+      'label' => t('Tagged in photos, videos, and posts'),
+    ),
+    'television' => array(
+      'permission' => 'user_likes',
+      'label' => t('Television liked'),
+    ),
+    'updates' => array(
+      'permission' => 'read_mailbox',
+      'label' => t('Inbox updates'),
+    ),
+    'videos' => array(
+      'permission' => 'user_videos',
+      'label' => t('Videos'),
+    ),
   );
 }
 

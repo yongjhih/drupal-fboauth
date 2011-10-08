@@ -36,7 +36,7 @@ function fboauth_uninstall() {
 function fboauth_schema() {
   $schema['fboauth_users'] = array(
     'fields' => array(
-      'uid'  => array(
+      'uid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -59,7 +59,7 @@ function fboauth_schema() {
 }
 
 /**
- * Implements of hook_schema_alter()
+ * Implements hook_schema_alter()
  */
 function fboauth_schema_alter(&$schema) {
   $schema['users']['fields']['mail']['length'] = 320;
