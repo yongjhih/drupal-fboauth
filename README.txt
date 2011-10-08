@@ -6,7 +6,7 @@ your site, it can be extended with various actions (such as a contact import) th
 
 Requirements
 ------------
-Drupal 6.x
+Drupal 7.x
 
 Installation
 ------------
