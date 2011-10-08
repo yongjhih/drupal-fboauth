@@ -105,7 +105,7 @@ function fboauth_action_connect($app_id, $access_token) {
     }
     // Since user's can't create new accounts on their own, show an error.
     else {
-      drupal_set_message('You must first log in before you can connect your account to Facebook.');
+      drupal_set_message('Your Facebook e-mail address does not match any existing accounts. If you have an account, you must first log in before you can connect your account to Facebook. Creation of new accounts on this site is disabled.');
     }
   }
 }
