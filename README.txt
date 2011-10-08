@@ -192,4 +192,4 @@ fboauth.api.php file included with this module.
 Support
 -------
 Please use the issue queue for filing bugs with this module at
-http://drupal.org/project/issues/1131300?categories=All
+http://drupal.org/project/issues/fboauth?categories=All
