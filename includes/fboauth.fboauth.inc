@@ -26,7 +26,7 @@ function fboauth_action_page($action) {
   $error_message = t('The Facebook login could not be completed due to an error. Please create an account or contact us directly. Details about this error have already been recorded to the error log.');
 
   if (!($app_id && $app_secret)) {
-    watchdog('fboauth', 'A Facebook login was attempted but could not be processed because the module is not yet configured. Vist the <a href="!url">Facebook OAuth configuration</a> to set up the module.', array('!url' => url('admin/settings/fboauth')));
+    watchdog('fboauth', 'A Facebook login was attempted but could not be processed because the module is not yet configured. Vist the <a href="!url">Facebook OAuth configuration</a> to set up the module.', array('!url' => url('admin/config/people/fboauth')));
   }
   elseif (isset($_REQUEST['error'])) {
     $link = fboauth_action_link_properties($action_name, $app_id);
@@ -73,16 +73,18 @@ function fboauth_action_connect($app_id, $access_token) {
 
   $fbuser = fboauth_graph_query('me', $access_token);
   $uid = fboauth_uid_load($fbuser->id);
+  $form_state['uid'] = $uid;
   // If the user has logged in before, load their account and login.
-  if (!$user->uid && $uid && ($account = user_load($uid))) {
-    user_external_login($account);
+  if (!$user->uid && $uid) {
+    user_login_submit(array(), $form_state);
   }
   // If the Facebook e-mail address matches an existing account, bind them
   // together and log in as that account.
-  elseif (!empty($fbuser->email) && ($account = user_load(array('mail' => $fbuser->email)))) {
+  elseif (!empty($fbuser->email) && ($account = array_shift(user_load_multiple(array(), array('mail' => $fbuser->email))))) {
     fboauth_save($account->uid, $fbuser->id);
+    $form_state['uid'] = $account->uid;
     // Logins will be denied if the user's account is blocked.
-    if (user_external_login($account)) {
+    if (user_login_submit(array(), $form_state)) {
       drupal_set_message(t('You\'ve connected your account with Facebook.'));
     }
   }
@@ -97,9 +99,9 @@ function fboauth_action_connect($app_id, $access_token) {
       $account = fboauth_create_user($fbuser);
       // Load the account fresh just to have a fully-loaded object.
       $account = user_load($account->uid);
-
+      $form_state['uid'] = $account->uid;  
       // Logins will be denied if the user's account is blocked.
-      if (user_external_login($account)) {
+      if (user_login_submit(array(), $form_state)) {
         drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
       }
     }
@@ -143,12 +145,12 @@ function fboauth_create_user($fbuser) {
   else {
     $username = $fbuser->name;
   }
-  $query = "SELECT uid FROM {users} WHERE name = '%s'";
-  $uid = db_result(db_query($query, $username));
+  $query = "SELECT uid FROM {users} WHERE name = ':name'";
+  $uid = db_query("SELECT uid FROM {users} WHERE name = :name", array(':name' => $username))->fetchField();
   $i = 0;
   while ($uid) {
     $i++;
-    $uid = db_result(db_query($query, $username . $i));
+    $uid = db_query($query, array(':name' => ($username . $i)))->fetchField();
   }
   if ($i > 0) {
     $username = $username . $i;
@@ -158,7 +160,9 @@ function fboauth_create_user($fbuser) {
   $edit = array(
     'name' => $username,
     'mail' => !empty($fbuser->email) ? $fbuser->email : '',
+    'init' => !empty($fbuser->email) ? $fbuser->email : '',
     'status' => 1,
+    'timezone' => variable_get('date_default_timezone'), //TODO: is this appropriate in sites with no default?
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
   );
@@ -179,23 +183,30 @@ function fboauth_create_user($fbuser) {
 
   // Retrieve the user's picture from Facebook and save it locally.
   if ($account->uid) {
-    $path = file_create_path('pictures');
-    file_check_directory($path, FILE_CREATE_DIRECTORY);
-    $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
-    $picture_path = $path . '/picture-' . $account->uid . '.jpg';
-    $file = fopen($picture_path, 'w');
-    fwrite($file, $picture_result->data);
-    fclose($file);
-
-    // Check to make sure the picture isn't too large for the site settings.
-    $picture_info = image_get_info($picture_path);
-    list($max_dimensions['width'], $max_dimensions['height']) = explode('x', variable_get('user_picture_dimensions', '85x85'));
-    if (image_get_toolkit() && $picture_info['width'] > $max_dimensions['width'] || $picture_info['height'] > $max_dimensions['height']) {
-      image_scale($picture_path, $picture_path, $max_dimensions['width'], $max_dimensions['height']);
+    $picture_directory =  file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
+    if(file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY)){
+      $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
+      //TODO: won't support .gif default FB image; should fail gracefully
+      $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
+      //TODO: do we need this as well as the file_save below?
+      $picture_file = file_save_data($picture_result->data, $picture_path, FILE_EXISTS_REPLACE);
+ 
+      // Check to make sure the picture isn't too large for the site settings.
+      //TODO: is this code necessary, or will saving the picture to the account below take care of ImageCache-style actions?
+      $max_dimensions = variable_get('user_picture_dimensions', '85x85');
+      file_validate_image_resolution($picture_file, $max_dimensions);
+      
+      // Update the user record.
+      $picture_file->uid = $account->uid;
+      $picture_file = file_save($picture_file);
+      file_usage_add($picture_file, 'user', 'user', $account->uid);
+      db_update('users')
+        ->fields(array(
+        'picture' => $picture_file->fid,
+        ))
+        ->condition('uid', $account->uid)
+        ->execute();
     }
-
-    // Update the database record.
-    db_query("UPDATE {users} SET picture = '%s' WHERE uid = %d", $picture_path, $account->uid);
   }
 
   // Allow other modules to manipulate the user information after save.
@@ -603,7 +614,7 @@ function fboauth_method_invoke($method, $access_token, $parameters = array()) {
   $parameters['format'] = 'json';
 
   // Perform the REST query.
-  $query_string = drupal_query_string_encode($parameters);
+  $query_string = drupal_http_build_query($parameters);
   $result = drupal_http_request('https://api.facebook.com/method/' . $method . '?' . $query_string);
   return json_decode($result->data);
 }

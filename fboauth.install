@@ -9,8 +9,6 @@
  * Implements hook_install().
  */
 function fboauth_install() {
-  drupal_install_schema('fboauth');
-
   // Facebook proxy e-mail addresses may be longer than the Drupal-default 254
   // character limit. Extend to 320 characters.
   _fboauth_change_user_mail_field();
@@ -20,7 +18,6 @@ function fboauth_install() {
  * Implements hook_uninstall().
  */
 function fboauth_uninstall() {
-  drupal_uninstall_schema('fboauth');
   variable_del('fboauth_id');
   variable_del('fboauth_secret');
   variable_del('fboauth_user_email');
@@ -78,7 +75,7 @@ function _fboauth_change_user_mail_field($action = 'install') {
   if ($action == 'install') {
     fboauth_schema_alter($schema);
   }
-  db_change_field($res, 'users', 'mail', 'mail', $schema['users']['fields']['mail']);
+  db_change_field('users', 'mail', 'mail', $schema['users']['fields']['mail']);
   return $res;
 }
 

@@ -16,11 +16,16 @@ function fboauth_profile_fields() {
 
   if (!isset($profile_fields)) {
     $profile_fields = array();
-    $profile_categories = profile_categories();
+    $profile_categories = db_select('profile_field')
+      ->distinct()
+      ->fields('profile_field', array('category'))
+      ->orderBy('category')
+      ->execute()
+      ->fetchCol();
     foreach ($profile_categories as $profile_category) {
-      $result = _profile_get_fields($profile_category['name']);
-      while ($field = db_fetch_array($result)) {
-        $profile_fields[$field['name']] = $field;
+      $result = _profile_get_fields($profile_category);
+      foreach ($result as $field) {
+        $profile_fields[$field->name] = (array) $field;
       }
     }
   }

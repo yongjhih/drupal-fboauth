@@ -12,12 +12,13 @@ function fboauth_menu() {
     'file' => 'includes/fboauth.fboauth.inc',
     'type' => MENU_CALLBACK,
   );
-  $items['admin/settings/fboauth'] = array(
+  $items['admin/config/people/fboauth'] = array(
     'title' => t('Facebook OAuth settings'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fboauth_settings_form'),
     'access arguments' => array('administer users'),
     'file' => 'includes/fboauth.pages.inc',
+    'description' => 'Configure site for Facebook Connect and map Facebook information to user profiles.',
     'type' => MENU_NORMAL_ITEM,
   );
   $items['user/%user/fboauth'] = array(
@@ -38,31 +39,19 @@ function fboauth_theme() {
   return array(
     'fboauth_action' => array(
       'pattern' => 'fboauth_action__[a-z0-9_]+',
-      'arguments' => array('action' => NULL, 'properties' => NULL),
+      'variables' => array('action' => NULL, 'properties' => NULL),
     ),
     'fboauth_action__connect' => array(
-      'arguments' => array('action' => NULL, 'properties' => NULL),
+      'variables' => array('action' => NULL, 'properties' => NULL),
     ),
     'fboauth_user_form_connect' => array(
-      'arguments' => array('uid' => NULL, 'fbid' => NULL),
+      'variables' => array('uid' => NULL, 'fbid' => NULL),
     ),
     'fboauth_user_info' => array(
-      'arguments' => array('account' => NULL),
+      'variables' => array('account' => NULL),
       'file' => 'includes/fboauth.pages.inc',
     ),
   );
-}
-
-/**
- * Implements hook_block().
- */
-function fboauth_block($op = 'list', $delta = '', $edit = array()) {
-  switch ($op) {
-    case 'list':
-      return fboauth_block_info();
-    case 'view':
-      return fboauth_block_view($delta);
-  }
 }
 
 /**
@@ -85,23 +74,6 @@ function fboauth_block_view($delta) {
     $block['content'] = fboauth_action_display('connect');
   }
   return $block;
-}
-
-/**
- * Implements hook_user().
- */
-function fboauth_user($op, &$edit, &$account, $category = NULL) {
-  switch ($op) {
-    case 'insert':
-      fboauth_user_insert($edit, $account, $category);
-      break;
-    case 'update':
-      fboauth_user_update($edit, $account, $category);
-      break;
-    case 'delete':
-      fboauth_user_delete($account);
-      break;
-  }
 }
 
 /**
@@ -131,16 +103,23 @@ function fboauth_user_delete($account) {
 }
 
 /**
+ * Implements hook_user_cancel().
+ */
+function fboauth_user_cancel($edit, $account, $method) {
+  fboauth_user_delete($account);
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
-  $uid = $form['#uid'];
+  $uid = $form['#user']->uid;
   $fbid = fboauth_fbid_load($uid);
 
   $fboauth_form = array(
     '#type' => 'item',
     '#title' => t('Facebook connect'),
-    '#children' => theme('fboauth_user_form_connect', $uid, $fbid),
+    '#markup' => theme('fboauth_user_form_connect', array('uid' => $uid, 'fbid' => $fbid)),
   );
 
   // The account settings move around in this form.
@@ -152,7 +131,9 @@ function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
   foreach (element_children($account_form) as $child) {
     $temp_form[$child] = $account_form[$child];
     if ($child == 'mail') {
-      $fboauth_form['weight'] = $temp_form[$child]['#weight'];
+      if (isset($temp_form[$child]['#weight'])) {
+        $fboauth_form['#weight'] = $temp_form[$child]['#weight'];
+      }
       $temp_form['fboauth'] = $fboauth_form;
     }
     unset($account_form[$child]);
@@ -239,8 +220,8 @@ function fboauth_action_load($action_name) {
  */
 function fboauth_fbid_load($uid = NULL) {
   $uid = isset($uid) ? $uid : $GLOBALS['user']->uid;
-  $result = db_query("SELECT fbid FROM {fboauth_users} WHERE uid = %d", $uid);
-  $fbid = db_result($result);
+  $result = db_query("SELECT fbid FROM {fboauth_users} WHERE uid = :uid", array(':uid' => $uid));
+  $fbid = $result->fetchField();
   return $fbid ? (int) $fbid : FALSE;
 }
 
@@ -248,8 +229,8 @@ function fboauth_fbid_load($uid = NULL) {
  * Load a Drupal User ID given a Facebook ID.
  */
 function fboauth_uid_load($fbid) {
-  $result = db_query("SELECT uid FROM {fboauth_users} WHERE fbid = %d", $fbid);
-  $uid = db_result($result);
+  $result = db_query("SELECT uid FROM {fboauth_users} WHERE fbid = :fbid", array(':fbid' => $fbid));
+  $uid = $result->fetchField();
   return $uid ? (int) $uid : FALSE;
 }
 
@@ -260,19 +241,26 @@ function fboauth_uid_load($fbid) {
  */
 function fboauth_save($uid, $fbid) {
   // Delete the existing Facebook ID if present for this Drupal user.
-  $delete_query = 'DELETE FROM {fboauth_users} WHERE uid = %d';
+  $delete_query = 'DELETE FROM {fboauth_users} WHERE uid = :uid';
   $delete_arguments = array($uid);
 
   // If setting a new Facebook ID for an account, also make sure no other
   // Drupal account is connected with this Facebook ID.
   if (isset($fbid)) {
-    $delete_query .= ' OR fbid = %d';
-    $delete_arguments[] = $fbid;
+    $delete_query .= ' OR fbid = :fbid';
+    db_query($delete_query, array(':uid' => $uid, ':fbid' => $fbid));
+  }
+  else {
+    db_query($delete_query, array(':uid' => $uid));
   }
 
-  db_query($delete_query, $delete_arguments);
   if (!empty($fbid)) {
-    db_query('INSERT INTO {fboauth_users} (uid, fbid) VALUES (%d, %d)', $uid, $fbid);
+    $id = db_insert('fboauth_users')
+  ->fields(array(
+      'uid' => $uid,
+      'fbid' => $fbid,
+    ))
+  ->execute();
   }
 }
 
@@ -303,7 +291,7 @@ function fboauth_action_display($action_name, $redirect = NULL, $app_id = NULL) 
   $action = fboauth_action_load($action_name);
   $link = fboauth_action_link_properties($action_name, $redirect, $app_id);
   $theme = isset($action['theme']) ? $action['theme'] : array('fboauth_action__' . $action_name, 'fboauth_action');
-  return theme($theme, $action, $link);
+  return theme($theme, array('action' => $action, 'properties' => $link));
 }
 
 /**
@@ -361,7 +349,9 @@ function fboauth_action_link_properties($action_name, $redirect = NULL, $app_id 
  *   configured.
  * @see fboauth_link_properties()
  */
-function theme_fboauth_action($action, $link) {
+function theme_fboauth_action($variables) {
+  $action = $variables['action'];
+  $link = $variables['properties'];
   // Because most Facebook actions initiate one-time actions, render it as a
   // button instead of a link. This makes for expected behavior that buttons
   // execute actions, not links.
@@ -384,7 +374,9 @@ function theme_fboauth_action($action, $link) {
  *   configured.
  * @see fboauth_link_properties()
  */
-function theme_fboauth_action__connect($action, $link) {
+function theme_fboauth_action__connect($variables) {
+  $action = $variables['action'];
+  $link = $variables['properties'];
   $url = url($link['href'], array('query' => $link['query']));
   $link['attributes']['class'] = isset($link['attributes']['class']) ? $link['attributes']['class'] : 'facebook-action-connect';
   $attributes = isset($link['attributes']) ? drupal_attributes($link['attributes']) : '';
@@ -394,7 +386,9 @@ function theme_fboauth_action__connect($action, $link) {
 /**
  * Display the Facebook Connect options on a user's profile form.
  */
-function theme_fboauth_user_form_connect($uid, $fbid) {
+function theme_fboauth_user_form_connect($variables) {
+  $uid = $variables['uid'];
+  $fbid = $variables['fbid'];
   if ($fbid) {
     $output = t('Your account is connected with Facebook. (<a href="!url">More info</a>)', array('!url' => url('user/' . $uid . '/fboauth')));
   }
