@@ -38,7 +38,7 @@ function fboauth_settings_form(&$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Import Facebook e-mail address'),
     '#description' => t('Importing Facebook e-mail addresses requires additional confirmation from the end-user, but it is <strong>strongly recommended</strong> to ensure proper user functionality (password reset, newsletter functionality, etc). If not used, providing a user with some kind of proxy e-mail address is recommended.'),
-    '#default_value' => variable_get('fboauth_user_username', TRUE),
+    '#default_value' => variable_get('fboauth_user_email', TRUE),
   );
 
   $form['fboauth_basic_mapping']['fboauth_user_username'] = array(
