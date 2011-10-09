@@ -162,7 +162,7 @@ function fboauth_create_user($fbuser) {
     'mail' => !empty($fbuser->email) ? $fbuser->email : '',
     'init' => !empty($fbuser->email) ? $fbuser->email : '',
     'status' => 1,
-    'timezone' => variable_get('date_default_timezone'), //TODO: is this appropriate in sites with no default?
+    'timezone' => variable_get('date_default_timezone'), // TODO: is this appropriate in sites with no default?
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
   );
@@ -190,16 +190,13 @@ function fboauth_create_user($fbuser) {
     $picture_directory =  file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
     if(file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY)){
       $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
-      //TODO: won't support .gif default FB image; should fail gracefully
       $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
-      //TODO: do we need this as well as the file_save below?
       $picture_file = file_save_data($picture_result->data, $picture_path, FILE_EXISTS_REPLACE);
  
       // Check to make sure the picture isn't too large for the site settings.
-      //TODO: is this code necessary, or will saving the picture to the account below take care of ImageCache-style actions?
       $max_dimensions = variable_get('user_picture_dimensions', '85x85');
       file_validate_image_resolution($picture_file, $max_dimensions);
-      
+
       // Update the user record.
       $picture_file->uid = $account->uid;
       $picture_file = file_save($picture_file);
