@@ -173,6 +173,10 @@ function fboauth_create_user($fbuser) {
     fboauth_profile_create_user($edit, $fbuser);
   }
 
+  // Field module support.
+  module_load_include('inc', 'fboauth', 'includes/fboauth.field');
+  fboauth_field_create_user($edit, $fbuser);
+
   // Allow other modules to manipulate the user information before save.
   foreach (module_implements('fboauth_user_presave') as $module) {
     $function = $module . '_fboauth_user_presave';
@@ -365,14 +369,17 @@ function fboauth_user_properties($include_common = FALSE) {
     'about' => array(
       'permission' => 'user_about_me',
       'label' => t('About me (a short bio)'),
+      'field_types' => array('text', 'text_long'),
     ),
     'bio' => array(
       'permission' => 'user_about_me',
       'label' => t('Biography'),
+      'field_types' => array('text_long'),
     ),
     'birthday' => array(
       'permission' => 'user_birthday',
       'label' => t('Birthday'),
+      'field_types' => array('text', 'date', 'datetime', 'datestamp'),
     ),
     'education' => array(
       'permission' => 'user_education_history',
@@ -385,14 +392,17 @@ function fboauth_user_properties($include_common = FALSE) {
     'hometown' => array(
       'permission' => 'user_hometown',
       'label' => t('Hometown'),
+      'field_types' => array('text'),
     ),
     'location' => array(
       'permission' => 'user_location',
       'label' => t('Location'),
+      'field_types' => array('text'),
     ),
     'relationship_status' => array(
       'permission' => 'user_relationships',
       'label' => t('Relationship status (Single, Married, It\'s complicated, etc.)'),
+      'field_types' => array('text', 'list_text'),
     ),
     'interested_in' => array(
       'permission' => 'user_relationship_details',
@@ -401,10 +411,12 @@ function fboauth_user_properties($include_common = FALSE) {
     'significant_other' => array(
       'permission' => 'user_relationship_details',
       'label' => t('Signficant other'),
+      'field_types' => array('text'),
     ),
     'political' => array(
       'permission' => 'user_religion_politics',
       'label' => t('Political view'),
+      'field_types' => array('text'),
     ),
     'quotes' => array(
       'permission' => 'user_about_me',
@@ -413,10 +425,12 @@ function fboauth_user_properties($include_common = FALSE) {
     'religion' => array(
       'permission' => 'user_religion_politics',
       'label' => t('Religion'),
+      'field_types' => array('text'),
     ),
     'website' => array(
       'permission' => 'user_website',
       'label' => t('Website'),
+      'field_types' => array('text'),
     ),
     'work' => array(
       'permission' => 'user_work_history',
@@ -426,18 +440,47 @@ function fboauth_user_properties($include_common = FALSE) {
 
   if ($include_common) {
     $properties += array(
-      'id' => array('label' => t('Facebook ID')),
-      'name' => array('label' => t('Full name')),
-      'first_name' => array('label' => t('First name')),
-      'last_name' => array('label' => t('Last name')),
-      'gender' => array('label' => t('Gender')),
-      'locale' => array('label' => t('Locale')),
-      'link' => array('label' => t('Facebook profile link')),
-      'username' => array('label' => t('Username')),
-      'third_party_id' => array('label' => t('3rd-party ID')),
-      'timezone' => array('label' => t('Timezone')),
-      'updated_time' => array('label' => t('Updated time')),
-      'verified' => array('label' => t('Verified')),
+      'id' => array(
+        'label' => t('Facebook ID'),
+      ),
+      'name' => array(
+        'label' => t('Full name'),
+        'field_types' => array('text'),
+      ),
+      'first_name' => array(
+        'label' => t('First name'),
+        'field_types' => array('text'),
+      ),
+      'last_name' => array(
+        'label' => t('Last name'),
+        'field_types' => array('text'),
+      ),
+      'gender' => array(
+        'label' => t('Gender'),
+        'field_types' => array('text', 'list_text'),
+      ),
+      'locale' => array(
+        'label' => t('Locale'),
+      ),
+      'link' => array(
+        'label' => t('Facebook profile link'),
+        'field_types' => array('text'),
+      ),
+      'username' => array(
+        'label' => t('Username'),
+      ),
+      'third_party_id' => array(
+        'label' => t('3rd-party ID'),
+      ),
+      'timezone' => array(
+        'label' => t('Timezone'),
+      ),
+      'updated_time' => array(
+        'label' => t('Updated time'),
+      ),
+      'verified' => array(
+        'label' => t('Verified')
+      ),
     );
     ksort($properties);
   }
@@ -581,6 +624,9 @@ function fboauth_user_connect_permissions() {
   if (module_exists('profile')) {
     $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_profile', array()));
   }
+
+  $connect_permissions += fboauth_user_permissions(variable_get('fboauth_user_fields', array()));
+
   return $connect_permissions;
 }
 

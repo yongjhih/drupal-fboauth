@@ -58,6 +58,10 @@ function fboauth_settings_form(&$form_state) {
     fboauth_profile_form_alter($form, $form_state);
   }
 
+  // Add in Field module mapping options, which are always available.
+  module_load_include('inc', 'fboauth', 'includes/fboauth.field');
+  fboauth_field_form_alter($form, $form_state);
+
   $form['permissions'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced permission settings'),
@@ -100,6 +104,7 @@ function fboauth_settings_form(&$form_state) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
+    '#weight' => 50,
   );
 
   return $form;
@@ -137,6 +142,10 @@ function fboauth_settings_form_submit($form, &$form_state) {
     module_load_include('inc', 'fboauth', 'includes/fboauth.profile');
     fboauth_profile_form_submit($form, $form_state);
   }
+
+  // Save field module values.
+  module_load_include('inc', 'fboauth', 'includes/fboauth.field');
+  fboauth_field_form_submit($form, $form_state);
 
   // Clean up saved checkbox values.
   variable_set('fboauth_user_properties', array_values(array_filter($form_state['values']['fboauth_user_properties'])));
