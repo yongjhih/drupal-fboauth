@@ -8,7 +8,7 @@ function fboauth_menu() {
     'title' => 'Facebook connect',
     'page callback' => 'fboauth_action_page',
     'page arguments' => array(1),
-    'access arguments' => array('access content'),
+    'access callback' => TRUE,
     'file' => 'includes/fboauth.fboauth.inc',
     'type' => MENU_CALLBACK,
   );
