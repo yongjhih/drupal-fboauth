@@ -8,10 +8,9 @@
 /**
  * Menu callback; Display the settings form for Facebook OAuth.
  */
-function fboauth_settings_form(&$form_state) {
+function fboauth_settings_form($form, &$form_state) {
   module_load_include('inc', 'fboauth', 'includes/fboauth.fboauth');
 
-  $form = array();
   $form['fboauth_id'] = array(
     '#type' => 'textfield',
     '#title' => t('App ID'),
