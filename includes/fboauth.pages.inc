@@ -11,7 +11,6 @@
 function fboauth_settings_form(&$form_state) {
   module_load_include('inc', 'fboauth', 'includes/fboauth.fboauth');
 
-  $form = array();
   $form['fboauth_id'] = array(
     '#type' => 'textfield',
     '#title' => t('App ID'),
