@@ -239,14 +239,14 @@ function fboauth_access_token($code, $action_name, $app_id = NULL, $app_secret =
   $query = array(
     'client_id' => $app_id,
     'client_secret' => $app_secret,
-    'redirect_uri' => url('fboauth/' . $action_name, array('absolute' => TRUE, 'query' => !empty($_GET['destination']) ? array('destination' => $_GET['destination']) : array())),
+    'redirect_uri' => fboauth_action_url('fboauth/' . $action_name, array('absolute' => TRUE, 'query' => !empty($_GET['destination']) ? array('destination' => $_GET['destination']) : array())),
     'code' => $code,
   );
   $token_url = url('https://graph.facebook.com/oauth/access_token', array('absolute' => TRUE, 'query' => $query));
   $authentication_result = drupal_http_request($token_url);
 
   if ($authentication_result->code != 200) {
-    watchdog('fboauth', 'Facebook OAuth could not acquire an access token from Facebook. We queried the following URL: <code><pre>@url</pre></code>. Facebook\'s servers returned an error @error: <code><pre>@return</pre></code>', array('@url' => $token_url, '@error' => $authentication_result->code, '@return' => check_plain(print_r($authentication_result->data))));
+    watchdog('fboauth', 'Facebook OAuth could not acquire an access token from Facebook. We queried the following URL: <code><pre>@url</pre></code>. Facebook\'s servers returned an error @error: <code><pre>@return</pre></code>', array('@url' => $token_url, '@error' => $authentication_result->code, '@return' => check_plain(print_r($authentication_result->data, TRUE))));
   }
   else {
     // The result from Facebook comes back in a query-string-like format,
@@ -259,7 +259,7 @@ function fboauth_access_token($code, $action_name, $app_id = NULL, $app_secret =
     }
   }
 
-  return $authentication_values['access_token'];
+  return isset($authentication_values['access_token']) ? $authentication_values['access_token'] : NULL;
 }
 
 /**
