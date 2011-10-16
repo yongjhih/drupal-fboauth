@@ -315,7 +315,7 @@ function fboauth_action_link_properties($action_name, $redirect = NULL, $app_id 
     $permissions = array();
   }
 
-  // Build the retun query string.
+  // Build the return query string.
   $query = array();
   if (isset($redirect)) {
     $query['destination'] = $redirect;
@@ -327,7 +327,7 @@ function fboauth_action_link_properties($action_name, $redirect = NULL, $app_id 
   $return = array(
     'query' => array(
       'client_id' => $app_id,
-      'redirect_uri' => url('fboauth/' . $action_name, array('absolute' => TRUE, 'query' => $query)),
+      'redirect_uri' => fboauth_action_url('fboauth/' . $action_name, array('absolute' => TRUE, 'query' => $query)),
     ),
     'href' => 'https://www.facebook.com/dialog/oauth',
   );
@@ -337,6 +337,27 @@ function fboauth_action_link_properties($action_name, $redirect = NULL, $app_id 
   }
 
   return $return;
+}
+
+/**
+ * Helper function to properly encode slashes in URLs.
+ *
+ * This function operates exactly like the core url() function, only it encodes
+ * forward-slashes as "%2f", which Drupal intentionally avoids in its own url()
+ * function. Encoded slashes are necessary to prevent Facebook from rejecting
+ * the return_uri property.
+ */
+function fboauth_action_url($path = NULL, array $options = array()) {
+  $url = url($path, $options);
+
+  $query_pos = strpos($url, '?');
+  if ($query_pos !== FALSE) {
+    $url_string = substr($url, 0, $query_pos);
+    $query_string = substr($url, $query_pos);
+    $url = $url_string . str_replace('/', '%2F', $query_string);
+  }
+
+  return $url;
 }
 
 /**
