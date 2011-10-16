@@ -81,6 +81,7 @@ function fboauth_action_connect($app_id, $access_token) {
   // together and log in as that account.
   elseif (!empty($fbuser->email) && ($account = user_load(array('mail' => $fbuser->email)))) {
     fboauth_save($account->uid, $fbuser->id);
+
     // Logins will be denied if the user's account is blocked.
     if (user_external_login($account)) {
       drupal_set_message(t('You\'ve connected your account with Facebook.'));
@@ -98,10 +99,17 @@ function fboauth_action_connect($app_id, $access_token) {
       // Load the account fresh just to have a fully-loaded object.
       $account = user_load($account->uid);
 
-      // Logins will be denied if the user's account is blocked.
-      if (user_external_login($account)) {
+      // If the account requires administrator approval the new account will
+      // have a status of '0' and not be activated yet.
+      if ($account->status == 0) {
+        _user_mail_notify('register_pending_approval', $account);
+        drupal_set_message(t('An account has been created for you on @sitename but an administrator needs to approve your account. In the meantime, a welcome message with further instructions has been sent to your e-mail address.', array('@sitename' => variable_get('site_name', ''))));
+      }
+      // Log in the user if no approval is required.
+      elseif (user_external_login($account)) {
         drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
       }
+      // If the login fails, user_external_login() throws its own error message.
     }
     // Since user's can't create new accounts on their own, show an error.
     else {
@@ -158,7 +166,8 @@ function fboauth_create_user($fbuser) {
   $edit = array(
     'name' => $username,
     'mail' => !empty($fbuser->email) ? $fbuser->email : '',
-    'status' => 1,
+    // If user_register is "1", then no approval required.
+    'status' => variable_get('user_register', 1) == 1 ? 1 : 0,
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
   );
