@@ -57,7 +57,9 @@ function fboauth_field_form_alter(&$form, &$form_state) {
  * Submit handler for the Facebook OAuth settings form.
  */
 function fboauth_field_form_submit(&$form, &$form_state) {
-  variable_set('fboauth_user_fields', array_filter($form_state['values']['fboauth_user_fields']));
+  if (isset($form_state['values']['fboauth_user_fields'])) {
+    variable_set('fboauth_user_fields', array_filter($form_state['values']['fboauth_user_fields']));
+  }
 }
 
 /**
