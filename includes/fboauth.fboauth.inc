@@ -73,9 +73,10 @@ function fboauth_action_connect($app_id, $access_token) {
 
   $fbuser = fboauth_graph_query('me', $access_token);
   $uid = fboauth_uid_load($fbuser->id);
-  $form_state['uid'] = $uid;
+
   // If the user has logged in before, load their account and login.
   if (!$user->uid && $uid) {
+    $form_state['uid'] = $uid;
     user_login_submit(array(), $form_state);
   }
   // If the Facebook e-mail address matches an existing account, bind them
@@ -99,11 +100,18 @@ function fboauth_action_connect($app_id, $access_token) {
       $account = fboauth_create_user($fbuser);
       // Load the account fresh just to have a fully-loaded object.
       $account = user_load($account->uid);
-      $form_state['uid'] = $account->uid;  
-      // Logins will be denied if the user's account is blocked.
-      if (user_login_submit(array(), $form_state)) {
+
+      // If the account requires administrator approval the new account will
+      // have a status of '0' and not be activated yet.
+      if ($account->status == 0) {
+        _user_mail_notify('register_pending_approval', $account);
+        drupal_set_message(t('An account has been created for you on @sitename but an administrator needs to approve your account. In the meantime, a welcome message with further instructions has been sent to your e-mail address.', array('@sitename' => variable_get('site_name', ''))));
+      }
+      // Log in the user if no approval is required.
+      elseif (user_external_login($account)) {
         drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
       }
+      // If the login fails, user_external_login() throws its own error message.
     }
     // Since user's can't create new accounts on their own, show an error.
     else {
@@ -161,7 +169,8 @@ function fboauth_create_user($fbuser) {
     'name' => $username,
     'mail' => !empty($fbuser->email) ? $fbuser->email : '',
     'init' => !empty($fbuser->email) ? $fbuser->email : '',
-    'status' => 1,
+    // If user_register is "1", then no approval required.
+    'status' => variable_get('user_register', 1) == 1 ? 1 : 0,
     'timezone' => variable_get('date_default_timezone'), // TODO: is this appropriate in sites with no default?
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
