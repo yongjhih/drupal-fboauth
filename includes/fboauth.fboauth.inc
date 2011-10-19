@@ -73,9 +73,10 @@ function fboauth_action_connect($app_id, $access_token) {
 
   $fbuser = fboauth_graph_query('me', $access_token);
   $uid = fboauth_uid_load($fbuser->id);
+
   // If the user has logged in before, load their account and login.
   if (!$user->uid && $uid && ($account = user_load($uid))) {
-    user_external_login($account);
+    fboauth_login_user($account);
   }
   // If the Facebook e-mail address matches an existing account, bind them
   // together and log in as that account.
@@ -83,7 +84,7 @@ function fboauth_action_connect($app_id, $access_token) {
     fboauth_save($account->uid, $fbuser->id);
 
     // Logins will be denied if the user's account is blocked.
-    if (user_external_login($account)) {
+    if (fboauth_login_user($account)) {
       drupal_set_message(t('You\'ve connected your account with Facebook.'));
     }
   }
@@ -106,10 +107,10 @@ function fboauth_action_connect($app_id, $access_token) {
         drupal_set_message(t('An account has been created for you on @sitename but an administrator needs to approve your account. In the meantime, a welcome message with further instructions has been sent to your e-mail address.', array('@sitename' => variable_get('site_name', ''))));
       }
       // Log in the user if no approval is required.
-      elseif (user_external_login($account)) {
+      elseif (fboauth_login_user($account)) {
         drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
       }
-      // If the login fails, user_external_login() throws its own error message.
+      // If the login fails, fboauth_login_user() throws its own error message.
     }
     // Since user's can't create new accounts on their own, show an error.
     else {
@@ -214,6 +215,19 @@ function fboauth_create_user($fbuser) {
   }
 
   return $account;
+}
+
+/**
+ * Given a Drupal user object, log the user in.
+ *
+ * This acts as a wrapper around user_external_login() in Drupal 6 and as a full
+ * replacement function in Drupal 7, since no direct equivalent exists.
+ *
+ * @param $account
+ *   A Drupal user account or UID.
+ */
+function fboauth_login_user($account) {
+  return user_external_login($account);
 }
 
 /**
