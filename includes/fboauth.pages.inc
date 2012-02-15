@@ -171,7 +171,7 @@ function theme_fboauth_user_info($variables) {
 
   $output = '';
   $output .= '<p>' . t('Your account is current connected with Facebook. Currently this site has access to the following information from Facebook.') . '</p>';
-  $output .= theme('item_list', array('basic' => t('Your basic information (Name, Gender, Picture, etc.)')) + fboauth_user_connect_permissions());
+  $output .= theme('item_list', array('items' => array('basic' => t('Your basic information (Name, Gender, Picture, etc.)'))) + fboauth_user_connect_permissions());
   $output .= '<p>' . t('You may disconnect your account from Facebook at any time by using the Deauthorize option below. If deauthorized, you will no longer be able to use Facebook to log into this account and must use a normal password. <strong>If you have not yet set a password, you will not be able to log onto this site</strong>.') . '</p>';
   $output .= fboauth_action_display('deauth');
   return $output;
