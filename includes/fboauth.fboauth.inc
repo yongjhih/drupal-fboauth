@@ -617,7 +617,20 @@ function fboauth_graph_query($id, $access_token, $parameters = array(), $method 
     drupal_set_message(t('Invalid request type "@type" for Facebook graphy query. Must be either @get or @post.', array('@type' => $method, '@get' => 'GET', '@post' => 'POST')), 'error');
   }
 
-  return json_decode($graph_result->data);
+  // If the response contains a redirect (such as to an image), return the
+  // redirect as the data. i.e. https://graph.facebook.com/19292868552/picture.
+  if (isset($graph_result->redirect_url)) {
+    $data = array(
+      'data' => $graph_result->data,
+      'redirect_code' => $graph_result->redirect_code,
+      'redirect_url' => $graph_result->redirect_url,
+    );
+  }
+  else {
+    $data = json_decode($graph_result->data);
+  }
+
+  return $data;
 }
 
 /**
