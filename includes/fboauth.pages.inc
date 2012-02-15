@@ -112,7 +112,7 @@ function fboauth_settings_form($form, &$form_state) {
 /**
  * Form validation function for fboauth_settings_form().
  */
-function fboauth_settings_form_valiate($form, &$form_state) {
+function fboauth_settings_form_validate($form, &$form_state) {
   // Remove trailing spaces from keys.
   $form_state['values']['fboauth_id'] = trim($form_state['values']['fboauth_id']);
   $form_state['values']['fboauth_secret'] = trim($form_state['values']['fboauth_secret']);
@@ -122,7 +122,7 @@ function fboauth_settings_form_valiate($form, &$form_state) {
     form_error($form['fboauth_id'], t('The App ID must be an integer (usually 11 characters).'));
   }
   if (strlen($form_state['values']['fboauth_secret']) != 32) {
-    form_error($form['fboauth_secret'], t('The App Secret does not appear valid. It is usually a 32 character hash.'));
+    form_error($form['fboauth_secret'], t('The App Secret does not appear to be valid. It is usually a 32 character hash.'));
   }
 }
 
