@@ -242,7 +242,6 @@ function fboauth_uid_load($fbid) {
 function fboauth_save($uid, $fbid) {
   // Delete the existing Facebook ID if present for this Drupal user.
   $delete_query = 'DELETE FROM {fboauth_users} WHERE uid = :uid';
-  $delete_arguments = array($uid);
 
   // If setting a new Facebook ID for an account, also make sure no other
   // Drupal account is connected with this Facebook ID.
