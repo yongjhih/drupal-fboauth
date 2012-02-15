@@ -58,6 +58,16 @@ function hook_fboauth_actions() {
 }
 
 /**
+ * Alter the list of Facebook Actions provided through hook_fboauth_actions().
+ *
+ * @see fboauth_fboauth_actions().
+ */
+function hook_fboauth_actions_alter(&$actions) {
+  // Replace the normal login callback with custom login callback.
+  $actions['connect']['callback'] = 'mymodule_fboauth_action_connect';
+}
+
+/**
  * Hook to manually map Facebook data to a Drupal user account upon connecting.
  *
  * This hook is fired before a Drupal user account is created by the Facebook
