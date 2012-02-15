@@ -60,7 +60,7 @@ function fboauth_action_invoke($action_name, $app_id, $access_token) {
     $callback = $action['callback'];
 
     if (function_exists($callback)) {
-      $callback($app_id, $access_token);
+      return $callback($app_id, $access_token);
     }
   }
 }
@@ -200,7 +200,7 @@ function fboauth_create_user($fbuser) {
       $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
       $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
       $picture_file = file_save_data($picture_result->data, $picture_path, FILE_EXISTS_REPLACE);
- 
+
       // Check to make sure the picture isn't too large for the site settings.
       $max_dimensions = variable_get('user_picture_dimensions', '85x85');
       file_validate_image_resolution($picture_file, $max_dimensions);
