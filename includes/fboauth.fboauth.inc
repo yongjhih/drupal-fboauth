@@ -188,7 +188,7 @@ function fboauth_create_user($fbuser) {
   $account = user_save(NULL, $edit);
 
   // Retrieve the user's picture from Facebook and save it locally.
-  if ($account->uid) {
+  if ($account->uid && variable_get('user_pictures', 0)) {
     $path = file_create_path('pictures');
     file_check_directory($path, FILE_CREATE_DIRECTORY);
     $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
