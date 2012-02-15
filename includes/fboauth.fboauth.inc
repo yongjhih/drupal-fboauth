@@ -601,8 +601,10 @@ function fboauth_user_connect_permissions() {
  *
  * @see http://developers.facebook.com/docs/reference/api/
  */
-function fboauth_graph_query($id, $access_token, $parameters = array(), $method = 'GET') {
-  $parameters['access_token'] = $access_token;
+function fboauth_graph_query($id, $access_token = NULL, $parameters = array(), $method = 'GET') {
+  if (isset($access_token)) {
+    $parameters['access_token'] = $access_token;
+  }
 
   if ($method == 'GET') {
     $graph_url = url('https://graph.facebook.com/' . $id, array('absolute' => TRUE, 'query' => $parameters));
