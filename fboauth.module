@@ -81,8 +81,7 @@ function fboauth_block_info() {
  */
 function fboauth_block_view($delta) {
   $block = array();
-  $app_id = isset($app_id) ? $app_id : variable_get('fboauth_id', '');
-  if ($app_id && !fboauth_fbid_load()) {
+  if (variable_get('fboauth_id', '') && !fboauth_fbid_load()) {
     $block['content'] = fboauth_action_display('connect');
   }
   return $block;
