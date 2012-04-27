@@ -613,7 +613,7 @@ function fboauth_graph_query($id, $access_token = NULL, $parameters = array(), $
   elseif ($method == 'POST') {
     $graph_url = 'https://graph.facebook.com/' . $id;
     $post_data = http_build_query($parameters, '', '&');
-    $graph_result = drupal_http_request($graph_url, array('headers' => array(), 'method' => $method, 'data' => $post_data));
+    $graph_result = drupal_http_request($graph_url, array(), $method, $post_data);
   }
   else {
     drupal_set_message(t('Invalid request type "@type" for Facebook graphy query. Must be either @get or @post.', array('@type' => $method, '@get' => 'GET', '@post' => 'POST')), 'error');
