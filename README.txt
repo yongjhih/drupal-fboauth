@@ -144,8 +144,9 @@ function mymodule_fboauth_actions() {
     // Optionally define a theme function for printing out your link (not
     // including the "theme_" prefix). If you use this option, you must register
     // this function in hook_theme(). If you don't use this option, the link
-    // will be output with the theme_fboauth_action() function.
-    // 'theme callback' => 'mymodule_fboauth_action',
+    // will be output with the theme_fboauth_action() function or the automatic
+    // suggestion theme_fboauth_action__[action_name]().
+    // 'theme' => 'mymodule_fboauth_action',
   );
   return $actions;
 }

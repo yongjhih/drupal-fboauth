@@ -180,13 +180,11 @@ function fboauth_fboauth_actions() {
     'file' => 'includes/fboauth.fboauth.inc',
     'callback' => 'fboauth_action_connect',
     'permissions' => array_keys(fboauth_user_connect_permissions()),
-    'theme callback' => 'fboauth_connect_link',
   );
   $actions['deauth'] = array(
     'title' => t('Deauthorize'),
     'file' => 'includes/fboauth.fboauth.inc',
     'callback' => 'fboauth_action_deauth',
-    'theme callback' => 'fboauth_deauth_link',
   );
   return $actions;
 }
@@ -281,9 +279,9 @@ function fboauth_save($uid, $fbid) {
 /**
  * Output a Facebook link.
  *
- * This is simply a convience function for outputing a link. If wanting to
- * customize the display of the link, override the theme_fboauth_connect_link()
- * function in your theme.
+ * This is simply a convenience function for outputing a link. If wanting to
+ * customize the display of the link, override the
+ * theme_fboauth_action__connect() function in your theme.
  *
  * @param $action_name
  *   The name of the action to display (usually as a link or button). Facebook
