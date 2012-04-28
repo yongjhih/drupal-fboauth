@@ -142,11 +142,19 @@ function fboauth_action_deauth($app_id, $access_token) {
 /**
  * Given a Facebook user object, associate or save a Drupal user account.
  */
-function fboauth_create_user($fbuser) {
+function fboauth_create_user($fbuser, $options = array()) {
+  // Set default options.
+  $defaults = array(
+    'username' => variable_get('fboauth_user_username', 'username'),
+    'picture' => (variable_get('user_pictures', 0) && variable_get('fboauth_user_picture', 'picture')) ? 'picture' : '',
+    'status' => variable_get('user_register', 1) == 1 ? 1 : 0,
+  );
+  $options += $defaults;
+
   // Use their Facebook user name (if defined), otherwise their real name.
   // If an account already exists with that name, increment until the namespace
   // is available.
-  if (variable_get('fboauth_user_username', 'username') == 'username' && !empty($fbuser->username)) {
+  if ($options['username'] === 'username' && !empty($fbuser->username)) {
     $username = $fbuser->username;
   }
   else {
@@ -168,7 +176,7 @@ function fboauth_create_user($fbuser) {
     'name' => $username,
     'mail' => !empty($fbuser->email) ? $fbuser->email : '',
     // If user_register is "1", then no approval required.
-    'status' => variable_get('user_register', 1) == 1 ? 1 : 0,
+    'status' => $options['status'],
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
   );
@@ -188,7 +196,7 @@ function fboauth_create_user($fbuser) {
   $account = user_save(NULL, $edit);
 
   // Retrieve the user's picture from Facebook and save it locally.
-  if ($account->uid && variable_get('user_pictures', 0)) {
+  if ($account->uid && $options['picture'] === 'picture') {
     $path = file_create_path('pictures');
     file_check_directory($path, FILE_CREATE_DIRECTORY);
     $picture_result = drupal_http_request('https://graph.facebook.com/' . $fbuser->id . '/picture?type=large');
