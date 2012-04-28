@@ -40,6 +40,15 @@ function fboauth_settings_form($form, &$form_state) {
     '#default_value' => variable_get('fboauth_user_email', TRUE),
   );
 
+  $form['fboauth_basic_mapping']['fboauth_user_picture'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Import Facebook user picture'),
+    '#description' => t('Import the Facebook picture to the built-in user picture.'),
+    '#default_value' => variable_get('fboauth_user_picture', 'picture') === 'picture',
+    '#return_value' => 'picture',
+    '#access' => variable_get('user_pictures', 0),
+  );
+
   $form['fboauth_basic_mapping']['fboauth_user_username'] = array(
     '#type' => 'radios',
     '#title' => t('User name import'),
@@ -103,7 +112,7 @@ function fboauth_settings_form($form, &$form_state) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    '#weight' => 50,
+    '#weight' => 100,
   );
 
   return $form;
@@ -135,6 +144,7 @@ function fboauth_settings_form_submit($form, &$form_state) {
 
   variable_set('fboauth_user_email', $form_state['values']['fboauth_user_email']);
   variable_set('fboauth_user_username', $form_state['values']['fboauth_user_username']);
+  variable_set('fboauth_user_picture', $form_state['values']['fboauth_user_picture']);
 
   // Save profile module values.
   if (module_exists('profile')) {
