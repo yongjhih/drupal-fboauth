@@ -124,6 +124,17 @@ function fboauth_form_user_profile_form_alter(&$form, &$form_state) {
   // The account settings move around in this form.
   $account_form = isset($form['account']) ? $form['account'] : $form;
 
+  // If a user has created/linked an account through a Facebook login, remove
+  // the current password field until they set a password.
+  // See http://drupal.org/node/1398782.
+  if ($fbid && $form['#user']->pass == '') {
+    if (empty($form_state['input'])) {
+      drupal_set_message(t('Please set a password to secure your account details.'), 'warning', FALSE);
+    }
+    unset($account_form['current_pass']);
+    $account_form['current_pass_required_values']['#value'] = array();
+  }
+
   // Inject the Facebook options after the e-mail settings. No weights are on
   // these elements by default, so we have to put it in order.
   $temp_form = array();
