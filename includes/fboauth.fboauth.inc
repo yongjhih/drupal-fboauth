@@ -664,3 +664,65 @@ function fboauth_method_invoke($method, $access_token, $parameters = array()) {
   $result = drupal_http_request('https://api.facebook.com/method/' . $method . '?' . $query_string);
   return json_decode($result->data);
 }
+
+/**
+ * Process a deauthorization request from Facebook.
+ *
+ * @see https://developers.facebook.com/docs/authentication/signed_request/
+ */
+function fboauth_deauthorize() {
+  // A signed_request key is used when a deauth url is provided by the app.
+  if (isset($_POST['signed_request'])) {
+    $app_secret = variable_get('fboauth_secret', '');
+    $signed_request = fboauth_parse_signed_request($_POST['signed_request'], $app_secret);
+
+    if ($signed_request && $deauth_uid = fboauth_uid_load($signed_request['user_id'])) {
+      fboauth_save($deauth_uid, NULL);
+      watchdog('fboauth', 'The account for UID @uid has been disconnected from Facebook by the user via Facebook.', array('@uid' => $deauth_uid));
+
+      // Allow other modules to hook into a deauth event.
+      module_invoke_all('fboauth_deauthorize', $deauth_uid, $signed_request['user_id']);
+    }
+  }
+}
+
+/**
+ * Parse a signed_request from Facebook.
+ *
+ * @see http://developers.facebook.com/docs/authentication/signed_request/
+ */
+function fboauth_parse_signed_request($signed_request, $secret) {
+  list($encoded_signature, $payload) = explode('.', $signed_request, 2);
+
+  // Decode the data.
+  $signature = fboauth_base64_url_decode($encoded_signature);
+  $data = json_decode(fboauth_base64_url_decode($payload), true);
+
+  if (strtoupper($data['algorithm']) !== 'HMAC-SHA256') {
+    watchdog('fboauth', 'A Facebook deauthorization request failed: Unknown signed request algorithm. Expected HMAC-SHA256.');
+    return null;
+  }
+
+  // Check the signature.
+  $expected_signature = hash_hmac('sha256', $payload, $secret, $raw = true);
+  if ($signature !== $expected_signature) {
+    watchdog('fboauth', 'A Facebook deauthorization request failed: Bad Signed JSON signature!');
+    return null;
+  }
+
+  return $data;
+}
+
+/**
+ * Helper function for signed_requests from Facebook.
+ *
+ * @param $input
+ *   A string of text passed back from a Facebook signed request.
+ * @return
+ *   The decoded string.
+ *
+ * @see fboauth_parse_signed_request()
+ */
+function fboauth_base64_url_decode($input) {
+  return base64_decode(strtr($input, '-_', '+/'));
+}
