@@ -120,6 +120,60 @@ function hook_fboauth_user_save($account, $fbuser) {
 }
 
 /**
+ * Alter the list of Facebook properties that can be mapped to fields.
+ *
+ * @param $properties
+ *   An associative array of Faceboook properties.
+ *
+ * @see fboauth_user_properties()
+ */
+function hook_fboauth_user_properties_alter(&$properties) {
+  // Allow the location property to be mapped to Geofield typed fields.
+  $properties['location']['field_types'][] = 'geofield';
+}
+
+/**
+ * Alter the list of Field API field types that are supported as targets.
+ *
+ * @param $convert_info
+ *   An associative array of field types and callbacks.
+ *
+ * @see fboauth_field_convert_info()
+ */
+function hook_fboauth_field_convert_info_alter(&$convert_info) {
+  // Provide a callback for mapping Facebook properties to Geofields.
+  $convert_info['geofield'] = array(
+    'label' => t('Geofield'),
+    'callback' => 'example_convert_geofield',
+  );
+}
+
+/**
+ * Example callback for conversion of Facebook location property to a Geofield.
+ *
+ * For more callback examples, check the list in fboauth_field_convert_info().
+ *
+ * @param $facebook_property_name
+ *   The name of the property being converted from Facebook's structure into
+ *   a Drupal data structure.
+ * @param $fbuser
+ *   An object representing the Facebook user. Typically the property to be
+ *   converted will be at $fbuser->$facebook_property_name.
+ * @param $field
+ *   The Field module field configuration array.
+ * @param $instance
+ *   The Field module field instance configuration array.
+ */
+function example_convert_geofield($facebook_property_name, $fbuser, $field, $instance) {
+  if (!empty($fbuser->$facebook_property_name)) {
+    // Perform conversion from Facebook's location information to geo info.
+    // Conversion code here...
+    return array('lat' => $lat, 'lon' => $long);
+  }
+  return NULL;
+}
+
+/**
  * Hook to respond to a deauthorization event from Facebook.
  *
  * This hook will fire if the Facebook app has configured the deauthorize
