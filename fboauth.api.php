@@ -120,6 +120,23 @@ function hook_fboauth_user_save($account, $fbuser) {
 }
 
 /**
+ * Alter the list of Facebook properties that can be mapped to fields.
+ *
+ * Note that this hook is not particularly useful in Drupal 6 because the
+ * Profile module field support is hard-coded. This hook only provides
+ * functional value in Drupal 7's Field module field-mapping.
+ *
+ * @param $properties
+ *   An associative array of Faceboook properties.
+ *
+ * @see fboauth_user_properties()
+ */
+function hook_fboauth_user_properties_alter(&$properties) {
+  // Allow the location property to be mapped to Geofield typed fields.
+  $properties['location']['field_types'][] = 'geofield';
+}
+
+/**
  * Hook to respond to a deauthorization event from Facebook.
  *
  * This hook will fire if the Facebook app has configured the deauthorize
