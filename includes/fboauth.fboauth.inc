@@ -474,51 +474,58 @@ function fboauth_user_properties($include_common = FALSE) {
     ),
   );
 
-  if ($include_common) {
-    $properties += array(
-      'id' => array(
-        'label' => t('Facebook ID'),
-      ),
-      'name' => array(
-        'label' => t('Full name'),
-        'field_types' => array('text'),
-      ),
-      'first_name' => array(
-        'label' => t('First name'),
-        'field_types' => array('text'),
-      ),
-      'last_name' => array(
-        'label' => t('Last name'),
-        'field_types' => array('text'),
-      ),
-      'gender' => array(
-        'label' => t('Gender'),
-        'field_types' => array('text', 'list_text'),
-      ),
-      'locale' => array(
-        'label' => t('Locale'),
-      ),
-      'link' => array(
-        'label' => t('Facebook profile link'),
-        'field_types' => array('text'),
-      ),
-      'username' => array(
-        'label' => t('Username'),
-      ),
-      'third_party_id' => array(
-        'label' => t('3rd-party ID'),
-      ),
-      'timezone' => array(
-        'label' => t('Timezone'),
-      ),
-      'updated_time' => array(
-        'label' => t('Updated time'),
-      ),
-      'verified' => array(
-        'label' => t('Verified')
-      ),
-    );
-    ksort($properties);
+  // Common properties. Always defined so that modules may alter if needed.
+  $common = array(
+    'id' => array(
+      'label' => t('Facebook ID'),
+    ),
+    'name' => array(
+      'label' => t('Full name'),
+      'field_types' => array('text'),
+    ),
+    'first_name' => array(
+      'label' => t('First name'),
+      'field_types' => array('text'),
+    ),
+    'last_name' => array(
+      'label' => t('Last name'),
+      'field_types' => array('text'),
+    ),
+    'gender' => array(
+      'label' => t('Gender'),
+      'field_types' => array('text', 'list_text'),
+    ),
+    'locale' => array(
+      'label' => t('Locale'),
+    ),
+    'link' => array(
+      'label' => t('Facebook profile link'),
+      'field_types' => array('text'),
+    ),
+    'username' => array(
+      'label' => t('Username'),
+    ),
+    'third_party_id' => array(
+      'label' => t('3rd-party ID'),
+    ),
+    'timezone' => array(
+      'label' => t('Timezone'),
+    ),
+    'updated_time' => array(
+      'label' => t('Updated time'),
+    ),
+    'verified' => array(
+      'label' => t('Verified')
+    ),
+  );
+  $properties += $common;
+
+  drupal_alter('fboauth_user_properties', $properties);
+  ksort($properties);
+
+  // Filter out unneeded properties.
+  if (!$include_common) {
+    $properties = array_diff_key($properties, $common);
   }
 
   return $properties;
