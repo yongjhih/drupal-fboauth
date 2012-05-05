@@ -451,26 +451,21 @@ function fboauth_user_properties($include_common = FALSE) {
     ),
     'name' => array(
       'label' => t('Full name'),
-      'field_types' => array('text'),
     ),
     'first_name' => array(
       'label' => t('First name'),
-      'field_types' => array('text'),
     ),
     'last_name' => array(
       'label' => t('Last name'),
-      'field_types' => array('text'),
     ),
     'gender' => array(
       'label' => t('Gender'),
-      'field_types' => array('text', 'list_text'),
     ),
     'locale' => array(
       'label' => t('Locale'),
     ),
     'link' => array(
       'label' => t('Facebook profile link'),
-      'field_types' => array('text'),
     ),
     'username' => array(
       'label' => t('Username'),
