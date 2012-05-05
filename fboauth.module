@@ -12,6 +12,13 @@ function fboauth_menu() {
     'file' => 'includes/fboauth.fboauth.inc',
     'type' => MENU_CALLBACK,
   );
+  $items['fboauth/deauthorize'] = array(
+    'title' => 'Facebook deauthorize',
+    'page callback' => 'fboauth_deauthorize',
+    'access callback' => TRUE,
+    'file' => 'includes/fboauth.fboauth.inc',
+    'type' => MENU_CALLBACK,
+  );
   $items['admin/config/people/fboauth'] = array(
     'title' => t('Facebook OAuth settings'),
     'page callback' => 'drupal_get_form',

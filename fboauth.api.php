@@ -118,3 +118,21 @@ function hook_fboauth_user_save($account, $fbuser) {
   );
   drupal_write_record('mytable', $mydata);
 }
+
+/**
+ * Hook to respond to a deauthorization event from Facebook.
+ *
+ * This hook will fire if the Facebook app has configured the deauthorize
+ * callback option on facebook.com. If your site were hosted at example.com,
+ * this URL should be configured to be http://example.com/fboauth/deauthorize.
+ *
+ * @param $uid
+ *   A Drupal user UID.
+ * @param $fbid
+ *   The Facebook user account ID that requested the deauthorization.
+ * @return
+ *   None.
+ */
+function hook_fboauth_deauthorize($uid, $fbid) {
+  watchdog('fboauth', 'hook_fboauth_deauthorize called with uid = !uid and fbid = !fbid', array('!uid' => $uid, '!fbid' => $fbid));
+}
