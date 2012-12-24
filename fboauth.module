@@ -248,7 +248,7 @@ function fboauth_fbid_load($uid = NULL) {
   $uid = isset($uid) ? $uid : $GLOBALS['user']->uid;
   $result = db_query("SELECT fbid FROM {fboauth_users} WHERE uid = %d", $uid);
   $fbid = db_result($result);
-  return $fbid ? (int) $fbid : FALSE;
+  return $fbid ? $fbid : FALSE;
 }
 
 /**
