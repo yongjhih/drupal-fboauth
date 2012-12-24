@@ -690,9 +690,9 @@ function fboauth_graph_query($id, $access_token = NULL, $parameters = array(), $
     $parameters['access_token'] = $access_token;
   }
 
-  if ($method == 'GET') {
+  if ($method == 'GET' || $method == 'DELETE') {
     $graph_url = url('https://graph.facebook.com/' . $id, array('absolute' => TRUE, 'query' => $parameters));
-    $graph_result = drupal_http_request($graph_url);
+    $graph_result = drupal_http_request($graph_url, array('headers' => array(), 'method' => $method));
   }
   elseif ($method == 'POST') {
     $graph_url = 'https://graph.facebook.com/' . $id;
@@ -700,7 +700,7 @@ function fboauth_graph_query($id, $access_token = NULL, $parameters = array(), $
     $graph_result = drupal_http_request($graph_url, array('headers' => array(), 'method' => $method, 'data' => $post_data));
   }
   else {
-    drupal_set_message(t('Invalid request type "@type" for Facebook graphy query. Must be either @get or @post.', array('@type' => $method, '@get' => 'GET', '@post' => 'POST')), 'error');
+    drupal_set_message(t('Invalid request type "@type" for Facebook graphy query. Must be either @get, @post, or @delete.', array('@type' => $method, '@get' => 'GET', '@post' => 'POST', '@delete' => 'DELETE')), 'error');
   }
 
   // If the response contains a redirect (such as to an image), return the
