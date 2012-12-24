@@ -130,7 +130,12 @@ function fboauth_action_deauth($app_id, $access_token) {
 
   // If successful, also remove the uid-fbid pairing.
   if (!is_array($result) && $result) {
+    $fbid = fboauth_fbid_load($user->uid);
     fboauth_save($user->uid, NULL);
+
+    // Allow other modules to hook into a deauth event.
+    module_invoke_all('fboauth_deauthorize', $user->uid, $fbid);
+
     drupal_set_message(t('Your account has been disconnected from Facebook.'));
   }
   else {
