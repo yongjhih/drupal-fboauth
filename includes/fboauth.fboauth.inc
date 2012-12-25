@@ -84,7 +84,7 @@ function fboauth_action_connect($app_id, $access_token) {
     fboauth_save($account->uid, $fbuser->id);
 
     // Logins will be denied if the user's account is blocked.
-    if (fboauth_login_user($account)) {
+    if ($user->uid || fboauth_login_user($account)) {
       drupal_set_message(t('You\'ve connected your account with Facebook.'));
     }
   }
