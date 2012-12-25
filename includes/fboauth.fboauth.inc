@@ -81,10 +81,14 @@ function fboauth_action_connect($app_id, $access_token) {
   // If the Facebook e-mail address matches an existing account, bind them
   // together and log in as that account.
   elseif (!empty($fbuser->email) && ($account = user_load_by_mail($fbuser->email))) {
-    fboauth_save($account->uid, $fbuser->id);
-
+    // If the user is already logged in, associate the two accounts.
+    if ($user->uid) {
+      fboauth_save($user->uid, $fbuser->id);
+      drupal_set_message(t('You\'ve connected your account with Facebook.'));
+    }
     // Logins will be denied if the user's account is blocked.
-    if (fboauth_login_user($account)) {
+    elseif (fboauth_login_user($account)) {
+      fboauth_save($account->uid, $fbuser->id);
       drupal_set_message(t('You\'ve connected your account with Facebook.'));
     }
   }
