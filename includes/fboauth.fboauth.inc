@@ -33,6 +33,13 @@ function fboauth_action_page($action) {
     watchdog('fboauth', 'A user refused to allow access to the necessary Facebook information (@permissions) to login to the site.', array('@permissions' => $link['query']['scope']));
     $error_message = t('This site requires access to information in order to log you into the site. If you like you can <a href="!facebook">sign in with Facebook again</a> or <a href="!register">register normally</a>.', array('!facebook' => url($link['href'], array('query' => $link['query'])), '!register' => url('user/register')));
   }
+  elseif (isset($_REQUEST['access_token'])) {
+    $destination = fboauth_action_invoke($action_name, $app_id, $_REQUEST['access_token']);
+    if (empty($destination)) {
+      $destination = isset($_REQUEST['destination']) ? $_REQUEST['destination'] : '<front>';
+    }
+    drupal_goto($destination);
+  }
   elseif (!isset($_REQUEST['code'])) {
     watchdog('fboauth', 'A Facebook request code was expected but no authorization was received.');
   }
