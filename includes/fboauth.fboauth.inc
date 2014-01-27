@@ -119,6 +119,7 @@ function fboauth_action_connect($app_id, $access_token) {
       }
       // Log in the user if no approval is required.
       elseif (fboauth_login_user($account)) {
+        _user_mail_notify('register_admin_created', $account);
         drupal_set_message(t('Welcome to @sitename. Basic information has been imported from Facebook into your account. You may want to <a href="!edit">edit your account</a> to confirm the details and set a password.', array('@sitename' => variable_get('site_name', ''), '!edit' => url('user/' . $account->uid . '/edit'))));
       }
       // If the login fails, fboauth_login_user() throws its own error message.
