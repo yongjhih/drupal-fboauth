@@ -188,6 +188,11 @@ function fboauth_create_user($fbuser, $options = array()) {
     $username = $username . $i;
   }
 
+  $language_locale_map = array(
+    'zh_CN' => 'zh-hans',
+    'zh_TW' => 'zh-hant'
+  );
+
   // Initialize basic properties that are unlikely to need changing.
   $edit = array(
     'name' => $username,
@@ -195,6 +200,7 @@ function fboauth_create_user($fbuser, $options = array()) {
     'init' => !empty($fbuser->email) ? $fbuser->email : '',
     // If user_register is "1", then no approval required.
     'status' => $options['status'],
+    'language' => array_key_exists($fbuser->locale, $language_locale_map) ? $language_locale_map[$fbuser->locale] : '',
     'timezone' => variable_get('date_default_timezone'), // TODO: is this appropriate in sites with no default?
     'fboauth' => TRUE, // Signify this is being imported by Facebook OAuth.
     'fboauth_fbid' => $fbuser->id, // So that other modules can load the account.
